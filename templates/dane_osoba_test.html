@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wyszukaj osobę</title>
+</head>
+<body>
+    <h1>Wyniki wyszukiwania osoby</h1>
+    <div id="wynik"></div>
+
+    <script>
+        // Automatyczne pobranie danych osoby o PESEL 0111169100
+        fetch('/osoba/?pesel=0111169100')
+            .then(response => response.json())
+            .then(data => {
+                const div = document.getElementById("wynik");
+                if (data.error) {
+                    div.innerHTML = "<p>" + data.error + "</p>";
+                } else {
+                    const fields = data.fields;
+                    let html = "<ul>";
+                    for (const key in fields) {
+                        const value = Object.values(fields[key])[0];
+                        html += `<li><strong>${key}:</strong> ${value}</li>`;
+                    }
+                    html += "</ul>";
+                    div.innerHTML = html;
+                }
+            });
+    </script>
+</body>
+</html>
