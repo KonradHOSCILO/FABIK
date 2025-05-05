@@ -19,7 +19,11 @@ from django.urls import path
 from Application.views import (
     wyszukaj_osobe_view,
     wyszukaj_pojazd_view,
-    osoba_html_view
+    osoba_html_view,
+    historia_view,
+    logowanie_view,
+    strona_glowna_view,
+    formularz_osoba_view
 )
 
 urlpatterns = [
@@ -27,5 +31,9 @@ urlpatterns = [
     path('osoba/', wyszukaj_osobe_view, name='wyszukaj_osobe'),
     path('pojazd/', wyszukaj_pojazd_view, name='wyszukaj_pojazd'),
     path('dane_osoba_test_html/', osoba_html_view, name='osoba_html'),
+    path('historia_html/', historia_view, name='historia_html'),
+    path('logowanie_html/', logowanie_view, name='logowanie_html'),
+    path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
+    path('formularz_osoba_html/', formularz_osoba_view, name='formularz_osoba_html'),
 ]
 

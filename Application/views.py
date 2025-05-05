@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_id_or_plate_or_vin
+from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_id_or_plate_or_vin
 from django.shortcuts import render
 from django.http import HttpResponse
 from google.oauth2 import service_account
@@ -26,5 +26,21 @@ def wyszukaj_pojazd_view(request):
         return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
 
 def osoba_html_view(request):
-    return render(request, 'dane_osoba_test.html')
+    pesel = request.GET.get("pesel", None)
+    dane = None
+    if pesel:
+        dane = fetch_person_by_pesel_or_data(pesel)
+    return render(request, "dane_osoba_test.html", {"dane": dane})
+
+def historia_view(request):
+    return render(request, 'historia.html')
+
+def strona_glowna_view(request):
+    return render(request, 'strona_glowna.html')
+
+def logowanie_view(request):
+    return render(request, 'logowanie.html')
+
+def formularz_osoba_view(request):
+    return render(request, 'formularz_osoba.html')
 
