@@ -75,3 +75,4 @@ def fetch_vehicle_by_id_or_plate_or_vin(identyfikator):
     url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/pojazdy"
     response = requests.get(url, headers=headers)
     return response, pole
+

@@ -79,3 +79,6 @@ def logowanie_view(request):
 # Widok wyświetlający formularz do wprowadzania danych osoby
 def formularz_osoba_view(request):
     return render(request, 'formularz_osoba.html')
+
+def szukaj_wybor_view(request):
+    return render(request, 'szukaj_wybor.html')
