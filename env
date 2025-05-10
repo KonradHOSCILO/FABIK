@@ -1,4 +1,0 @@
-GOOGLE_APPLICATION_CREDENTIALS=./credentials.json
-SECRET_KEY=django-insecure-r8m6)#ge732^-h8lzbcgfmf*g_nt@w!v^q3thnpsg_9asi7)%p
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost

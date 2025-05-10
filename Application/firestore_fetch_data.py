@@ -2,10 +2,9 @@ import requests
 import os
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
-import random
-import string
+import random, string, datetime
+import firebase_admin
 from firebase_admin import credentials, firestore
-import datetime
 from dotenv import load_dotenv
 
 # Funkcja do uzyskiwania danych uwierzytelniających z pliku JSON
@@ -23,7 +22,10 @@ def get_credentials():
     headers = {"Authorization": f"Bearer {credentials.token}"}
     return project_id, headers
 
-# Funkcja wyszukująca osobę na podstawie PESEL lub danych osobowych
+def initialize_firebase():
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+        firebase_admin.initialize_app(cred)
 def format_firestore_fields(fields):
     formatted_data = {}
 
@@ -43,20 +45,51 @@ def format_firestore_fields(fields):
 def generate_random_id(length=7):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-def create_interwencja_document(interwencja_id):
+def create_interwencja_document():
+    project_id, headers = get_credentials()
+    id_interwencji = generate_random_id()
+    data_today = datetime.datetime.now().strftime('%Y-%m-%d')
+    document_name = f"{data_today}_{id_interwencji}_601"
+
+    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje?documentId={document_name}"
+
+    payload = {
+        "fields": {
+            "data_wysłania": {"stringValue": ""},
+            "id_notatki": {"stringValue": id_interwencji},
+            "patrol_wysylajacy": {"stringValue": "601"},
+            "pesele_osob_biaracych_udzial_w_interwencji": {"arrayValue": {"values": []}},
+            "pojazdy_biorace_udzial_w_interwencji": {"arrayValue": {"values": []}},
+            "notatka": {"stringValue": ""},
+            "status": {"stringValue": "w toku"}
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 200:
+        return document_name
+    else:
+        print(response.text)
+        return None
+
+
+def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny):
+    initialize_firebase()
     db = firestore.client()
+    doc_ref = db.collection('interwencje').document(interwencja_id)
 
-    now = datetime.datetime.now().strftime('%Y-%m-%d')
+    # Użyj metody arrayUnion, aby dodać numer rejestracyjny do tablicy
+    try:
+        doc_ref.update({
+            "pojazdy_biorace_udzial_w_interwencji": firestore.ArrayUnion([numer_rejestracyjny])
+        })
+        print("Pojazd został dodany.")
+        return True, None
+    except Exception as e:
+        print(f"Błąd: {str(e)}")
+        return False, str(e)
 
-    doc_ref = db.collection('interwencje').document(f"{now}_{interwencja_id}")
-    doc_ref.set({
-        'data_wysłania': '',
-        'id_notatki': '',
-        'patrol_wysylajacy': '601',
-        'pesele_osob_biaracych_udzial_w_interwencji': [],
-        'pojazdy_biorace_udzial_w_interwencji': [],
-        'notatka': ''
-    })
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     project_id, headers = get_credentials()
 

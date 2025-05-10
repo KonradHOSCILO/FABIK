@@ -1,10 +1,11 @@
 from django.http import JsonResponse
-from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_plate, fetch_interwencje_by_patrol
-from django.shortcuts import render
+from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_plate, fetch_interwencje_by_patrol, create_interwencja_document, dodaj_pojazd_do_interwencji
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import requests
+import json
 
 
 # Widok odpowiedzialny za wyszukiwanie osoby na podstawie danych (pesel, imię, nazwisko, data urodzenia)
@@ -41,18 +42,38 @@ def wyszukaj_pojazd_view(request):
 
 # Widok do wyświetlania danych osoby w formie HTML
 def rozpocznij_interwencje_view(request):
-    # Generowanie losowego ID (7 znaków)
-    losowe_id = ''.join(random.choices(string.ascii_letters + string.digits, k=7))
+    if request.method == "POST":
+        interwencja_id = create_interwencja_document()
+        if interwencja_id:
+            response = redirect("szukaj_wybor_html")
+            response.set_cookie("interwencja_id", interwencja_id)
+            return response
+        else:
+            return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
+    return HttpResponse("Nieprawidłowa metoda", status=405)
 
-    # Utworzenie dokumentu w Firestore
-    create_interwencja_document(losowe_id)
+def dodaj_pojazd_interwencja_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            interwencja_id = data.get("interwencja_id")
+            numer_rejestracyjny = data.get("numer_rejestracyjny")
+            if not interwencja_id or not numer_rejestracyjny:
+                return JsonResponse({"error": "Brakuje danych"}, status=400)
 
-    # Zapisanie ID do cookies i przekierowanie
-    response = redirect('/szukaj_wybor_html')
-    response.set_cookie('interwencja_id', losowe_id)
+            sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny)
 
-    return response
+            if sukces:
+                return JsonResponse({"status": "ok"})
+            else:
+                print(f"Błąd: {blad}")  # Logujemy szczegóły błędu
+                return JsonResponse({"error": "Nie udało się dodać pojazdu", "details": blad}, status=500)
 
+        except Exception as e:
+            print(f"Zdarzył się błąd: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Tylko POST"}, status=405)
 
 # Widok wyświetlający stronę historii (brak logiki w tym widoku)
 def historia_view(request):

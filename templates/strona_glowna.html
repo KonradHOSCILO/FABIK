@@ -46,7 +46,10 @@
 
         <!-- Przycisk -->
         <div class="mt-3">
-          <a href = "/szukaj_wybor_html" class="btn btn-primary w-100 py-3" role="button"> Rozpocznij interwencje</a>
+          <form method="post" action="{% url 'rozpocznij_interwencje' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary w-100 py-3">Rozpocznij interwencję</button>
+          </form>
         </div>
 
         <!-- Pozostałe opcje -->

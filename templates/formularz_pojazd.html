@@ -50,7 +50,6 @@
       const wynikDiv = document.getElementById("wynik");
 
       if (response.ok && data && !data.error) {
-        console.log("Surowe dane z API:", data);
 
         let lista = '';
         function formatValue(value) {
@@ -131,12 +130,56 @@
       }
     });
 
-    document.getElementById("addVehicleButton").addEventListener("click", function () {
-      const numer_rejestracyjny = document.getElementById("numer_rejestracyjny").value.trim();
-      if (numer_rejestracyjny) {
-        window.location.href = `/szukaj_wybor_html?dodany_pojazd=${numer_rejestracyjny}`;
-      }
+  document.getElementById("addVehicleButton").addEventListener("click", async function () {
+  const numer_rejestracyjny = document.getElementById("numer_rejestracyjny").value.trim();
+  const interwencja_id = getCookie("interwencja_id");
+
+  if (!numer_rejestracyjny) {
+    alert("Wprowadź numer rejestracyjny pojazdu.");
+    return;
+  }
+
+  if (!interwencja_id) {
+    alert("Brak ID interwencji w ciasteczkach.");
+    return;
+  }
+
+  const payload = {
+    numer_rejestracyjny,
+    interwencja_id
+  };
+
+  console.log("Wysyłane dane do backendu:", payload);
+
+  try {
+    const response = await fetch("/dodaj_pojazd_interwencja/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify(payload)
     });
+
+    const result = await response.json();
+    console.log("Odpowiedź z backendu:", result);
+
+    if (response.ok && result.status === "ok") {
+      alert("Pojazd został dodany do interwencji.");
+    } else {
+      alert("Błąd: " + (result.error || "Nie udało się dodać pojazdu." || result));
+    }
+  } catch (error) {
+    console.error("Błąd żądania:", error);
+    alert("Wystąpił błąd przy dodawaniu pojazdu.");
+  }
+});
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
   </script>
 </body>
 
