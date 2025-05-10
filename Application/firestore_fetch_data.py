@@ -1,24 +1,25 @@
 import requests
+import os
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import random
 import string
 from firebase_admin import credentials, firestore
 import datetime
-
+from dotenv import load_dotenv
 
 # Funkcja do uzyskiwania danych uwierzytelniających z pliku JSON
 def get_credentials():
-    # Wczytanie poświadczeń z pliku JSON, który zawiera dane uwierzytelniające do usługi Google
+    # Pobierz ścieżkę z pliku .env
+    cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    # Wczytanie poświadczeń z pliku JSON
     credentials = service_account.Credentials.from_service_account_file(
-        'C:\\Users\\Konrad H\\Documents\\GitHub\\FABIK\\credentials.json',
-        scopes=['https://www.googleapis.com/auth/datastore']  # Uprawnienia do korzystania z Datastore
+        cred_path,
+        scopes=['https://www.googleapis.com/auth/datastore']
     )
-    # Odświeżenie tokenu dostępu
     credentials.refresh(Request())
-    # Identyfikator projektu
     project_id = credentials.project_id
-    # Nagłówek z tokenem autoryzacyjnym
     headers = {"Authorization": f"Bearer {credentials.token}"}
     return project_id, headers
 

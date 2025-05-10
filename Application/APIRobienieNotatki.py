@@ -1,13 +1,21 @@
+import os
 import requests
 import random
 import string
 from datetime import datetime, timezone
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+from dotenv import load_dotenv
+
+# Załaduj zmienne środowiskowe z pliku .env
+load_dotenv()
+
+# Pobierz ścieżkę do pliku credentials.json
+cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # Autoryzacja
 credentials = service_account.Credentials.from_service_account_file(
-    'C:\\Users\\Konrad H\\Documents\\GitHub\\FABIK\\credentials.json',
+    cred_path,
     scopes=['https://www.googleapis.com/auth/datastore']
 )
 credentials.refresh(Request())
