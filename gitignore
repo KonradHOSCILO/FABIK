@@ -1,0 +1,36 @@
+# 🔒 Pliki poufne
+.env
+credentials.json
+
+# 🧠 Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# 📦 Virtual environment
+env/
+venv/
+ENV/
+.venv/
+
+# 🗃️ Bazy danych lokalne
+*.sqlite3
+*.db
+
+# 🧪 Logi i tymczasowe
+*.log
+
+# 🧰 IDE i edytory
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 🖼️ Systemowe śmieci
+.DS_Store
+Thumbs.db
+
+# 🚫 Inne
+*.bak
+*.tmp
