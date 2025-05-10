@@ -1,6 +1,5 @@
 Django
 requests
-firebase-admin
 google-auth
 google-auth-oauthlib
 python-dotenv
