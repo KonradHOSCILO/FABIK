@@ -14,7 +14,8 @@ from Application.views import (
     szukaj_osoba_pesel_view,
     szukaj_osoba_dane_view,
     notatka_view,
-    rozpocznij_interwencje_view
+    rozpocznij_interwencje_view,
+    dodaj_pojazd_interwencja_view
 )
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
@@ -22,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('osoba/', wyszukaj_osobe_view, name='wyszukaj_osobe'),
     path('pojazd/', wyszukaj_pojazd_view, name='wyszukaj_pojazd'),
+    path('dodaj_pojazd_interwencja/', dodaj_pojazd_interwencja_view, name='dodaj_pojazd_interwencja'),
     path('historia_html/', historia_view, name='historia_html'),
     path('logowanie_html/', logowanie_view, name='logowanie_html'),
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
