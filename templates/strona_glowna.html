@@ -25,7 +25,9 @@
           <div class="col-md-6">
             <div class="card border-0 shadow-sm">
               <div class="card-body">
-                <p class="text-secondary mb-2">Status Patrolu 253: Wolny</p>
+                <p class="text-secondary mb-2">
+                    Status patrolu {{ user.username }}: wolny
+                </p>
                 <h6 class="fw-bold">W trakcie Dokumentacji</h6>
               </div>
             </div>
@@ -66,8 +68,13 @@
 
         <!-- Przycisk -->
         <div class="mt-5">
-          <button class="btn btn-secondary w-100">Wyloguj się</button>
+            <form method="post" action="{% url 'logout' %}">
+             {% csrf_token %}
+                <button type="submit" class="btn btn-secondary w-100">Wyloguj się</button>
+            </form>
         </div>
+
+
 
       </div>
       

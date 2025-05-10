@@ -5,6 +5,22 @@ from django.http import HttpResponse
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import requests
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+def patrol_login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('login')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('strona_glowna_html')  # zmień na swój widok po zalogowaniu
+        else:
+            messages.error(request, "Nieprawidłowy login lub hasło.")
+    return render(request, 'logowanie.html')
+
 
 
 # Widok odpowiedzialny za wyszukiwanie osoby na podstawie danych (pesel, imię, nazwisko, data urodzenia)

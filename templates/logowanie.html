@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
+{% load static %}
+
 
   <head>
     <meta charset="UTF-8" />
@@ -13,8 +15,9 @@
 
       <!-- Obraz -->
       <div class="text-center mb-4">
-        <img src="images/logo_fabik.png" alt="Logo Image" class="d-block mx-auto w-50"/>
+        <img src="{% static 'images/logo_fabik.png' %}" alt="Logo" class="img-fluid d-block mx-auto" style="max-width:350px; height:auto;">
       </div>
+
 
       <div class="w-100 px-4">
         <h2 class="text-center fw-bold mb-4">Rozpocznij nową sesję</h2>
@@ -22,24 +25,35 @@
 
       <!-- Formularz logowania -->
       <div class="card shadow p-4">
-        <form>
+        <form method="post" action="{% url 'patrol_login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="login" class="form-label">Login</label>
+                <input type="text" class="form-control rounded-3" id="login" name="login" placeholder="Wprowadź login"/>
+            </div>
 
-          <div class="mb-3">
-            <label for="login" class="form-label">Login</label>
-            <input type="text" class="form-control rounded-3" id="login" placeholder="Wprowadź login"/>
-          </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Hasło</label>
+                <input type="password" class="form-control rounded-3" id="password" name="password" placeholder="Wprowadź hasło"/>
+            </div>
 
-          <div class="mb-3">
-            <label for="password" class="form-label">Hasło</label>
-            <input type="password"class="form-control rounded-3" id="password" placeholder="Wprowadź hasło"/>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100 rounded-3">Zaloguj się</button>
-
+            <button type="submit" class="btn btn-primary w-100 rounded-3">Zaloguj się</button>
         </form>
+          {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                  <div class="alert alert-danger">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+
+
       </div>
 
     </div>
   </body>
-  
+
 </html>
