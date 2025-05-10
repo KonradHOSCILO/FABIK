@@ -76,3 +76,24 @@ def fetch_vehicle_by_id_or_plate_or_vin(identyfikator):
     response = requests.get(url, headers=headers)
     return response, pole
 
+
+def fetch_interwencje_by_patrol(patrol_id):
+    project_id, headers = get_credentials()
+    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje"
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return []
+
+    documents = response.json().get("documents", [])
+    matching = []
+
+    for doc in documents:
+        doc_id = doc.get("name", "").split("/")[-1]
+        if doc_id.endswith(f"_{patrol_id}"):
+            matching.append({
+                "id": doc_id,
+                "fields": doc.get("fields", {})
+            })
+    return matching
+

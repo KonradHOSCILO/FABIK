@@ -7,7 +7,7 @@ from google.auth.transport.requests import Request
 
 # Autoryzacja
 credentials = service_account.Credentials.from_service_account_file(
-    'credentials.json',
+    'C:\\Users\\Konrad H\\Documents\\GitHub\\FABIK\\credentials.json',
     scopes=['https://www.googleapis.com/auth/datastore']
 )
 credentials.refresh(Request())
@@ -37,7 +37,7 @@ id_notatki = generate_id()
 timestamp = datetime.now(timezone.utc).isoformat()
 
 data_dokumentu = datetime.now().strftime('%Y:%m:%d_%H:%M:%S')
-nazwa_dokumentu = f"{data_dokumentu}_{id_notatki}"
+nazwa_dokumentu = f"{data_dokumentu}_{id_notatki}_601"
 
 # === JSON do Firestore ===
 payload = {
@@ -55,7 +55,7 @@ payload = {
 }
 
 # === Zapisz do Firestore ===
-url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/notatki?documentId={nazwa_dokumentu}"
+url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje?documentId={nazwa_dokumentu}"
 response = requests.post(url, headers=headers, json=payload)
 
 if response.status_code == 200:

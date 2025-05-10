@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_id_or_plate_or_vin
+from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_id_or_plate_or_vin, fetch_interwencje_by_patrol
 from django.shortcuts import render
 from django.http import HttpResponse
 from google.oauth2 import service_account
@@ -63,7 +63,9 @@ def osoba_html_view(request):
 
 # Widok wyświetlający stronę historii (brak logiki w tym widoku)
 def historia_view(request):
-    return render(request, 'historia.html')
+    patrol_id = '601'  # Hardcodowane ID patrolu
+    interwencje = fetch_interwencje_by_patrol(patrol_id)
+    return render(request, 'historia.html', {'interwencje': interwencje})
 
 
 # Widok wyświetlający stronę główną

@@ -25,8 +25,8 @@ urlpatterns = [
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
     path('formularz_osoba_html/', formularz_osoba_view, name='formularz_osoba_html'),
     path('szukaj_wybor_html/', szukaj_wybor_view, name='szukaj_wybor_html'),
-    path('lista_osoby_pojazdy_html/', szukaj_wybor_view, name='lista_osoby_pojazdy_html'),
-    path('dane_pojazd_html/', szukaj_wybor_view, name='dane_pojazd_html'),
-    path('formularz_pojazd_html/', szukaj_wybor_view, name='formularz_pojazd_html'),
+    path('lista_osoby_pojazdy_html/', lista_osoby_pojazdy_view, name='lista_osoby_pojazdy_html'),
+    path('dane_pojazd_html/', dane_pojazd_view, name='dane_pojazd_html'),
+    path('formularz_pojazd_html/', formularz_pojazd_view, name='formularz_pojazd_html'),
 ]
 
