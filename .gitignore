@@ -35,4 +35,7 @@ Thumbs.db
 *.bak
 *.tmp
 db.sqlite3
+<<<<<<< HEAD
 db.sqlite3
+=======
+>>>>>>> Logowanie
