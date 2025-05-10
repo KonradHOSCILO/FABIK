@@ -1,6 +1,11 @@
 import requests
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+import random
+import string
+from firebase_admin import credentials, firestore
+import datetime
+
 
 # Funkcja do uzyskiwania danych uwierzytelniających z pliku JSON
 def get_credentials():
@@ -18,63 +23,82 @@ def get_credentials():
     return project_id, headers
 
 # Funkcja wyszukująca osobę na podstawie PESEL lub danych osobowych
+def format_firestore_fields(fields):
+    formatted_data = {}
+
+    for key, value in fields.items():
+        if 'stringValue' in value:
+            formatted_data[key] = value['stringValue']
+        elif 'integerValue' in value:
+            formatted_data[key] = value['integerValue']
+        elif 'arrayValue' in value:
+            formatted_data[key] = [item.get('stringValue', '–') for item in value['arrayValue'].get('values', [])]
+        elif 'booleanValue' in value:
+            formatted_data[key] = 'Tak' if value['booleanValue'] else 'Nie'
+        # Możesz dodać inne przypadki, np. dla 'mapValue', 'nullValue', itd.
+
+    return formatted_data
+
+def generate_random_id(length=7):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+def create_interwencja_document(interwencja_id):
+    db = firestore.client()
+
+    now = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    doc_ref = db.collection('interwencje').document(f"{now}_{interwencja_id}")
+    doc_ref.set({
+        'data_wysłania': '',
+        'id_notatki': '',
+        'patrol_wysylajacy': '601',
+        'pesele_osob_biaracych_udzial_w_interwencji': [],
+        'pojazdy_biorace_udzial_w_interwencji': [],
+        'notatka': ''
+    })
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
-    # Pobranie poświadczeń
     project_id, headers = get_credentials()
 
-    # Jeśli podano PESEL, wykonaj zapytanie do Firestore, aby znaleźć osobę po PESELU
     if pesel:
         url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/osoby/{pesel}"
-        return requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return format_firestore_fields(response.json().get("fields", {}))
+        else:
+            return None
 
-    # Jeśli podano dane osobowe, wykonaj zapytanie do Firestore, aby znaleźć osobę po imieniu, nazwisku i dacie urodzenia
     elif imie and nazwisko and data_urodzenia:
-        # Zapytanie do Firestore o wszystkie dokumenty z kolekcji 'osoby'
         url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/osoby"
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             return None
 
-        # Jeśli odpowiedź jest poprawna, przeszukaj dokumenty
         all_docs = response.json().get("documents", [])
         matching = []
 
         for doc in all_docs:
             fields = doc.get("fields", {})
-            # Sprawdzanie czy dane w dokumencie pasują do przekazanych danych
             if (
                     fields.get("imie", {}).get("stringValue", "").lower() == imie.lower() and
                     fields.get("nazwisko", {}).get("stringValue", "").lower() == nazwisko.lower() and
                     fields.get("data_urodzenia", {}).get("stringValue", "") == data_urodzenia,
             ):
-                matching.append(fields)
+                matching.append(format_firestore_fields(fields))
 
-        return matching  # Zwracamy listę pasujących osób, nie samą odpowiedź API
+        return matching
 
 # Funkcja wyszukująca pojazd po ID, numerze rejestracyjnym lub numerze VIN
-def fetch_vehicle_by_id_or_plate_or_vin(identyfikator):
+def fetch_vehicle_by_plate(identyfikator):
     # Pobranie poświadczeń
     project_id, headers = get_credentials()
 
-    # Jeśli identyfikator jest długi (to ID pojazdu), zapytanie po ID
-    if "_" in identyfikator and len(identyfikator) >= 25:
+    # Jeśli identyfikator to numer rejestracyjny (7 znaków)
+    if len(identyfikator) == 7:
         url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/pojazdy/{identyfikator}"
         response = requests.get(url, headers=headers)
-        return response, "id"
-
-    # Jeśli identyfikator jest numerem rejestracyjnym (7 znaków), zapytanie po numerze rejestracyjnym
-    elif len(identyfikator) == 7:
-        pole = "tablica_rejestracyjna"
-    # Jeśli identyfikator jest numerem VIN (17 znaków), zapytanie po VIN
-    elif len(identyfikator) == 17:
-        pole = "vin"
+        return response, "tablica_rejestracyjna"
     else:
-        return None, "błąd"  # Błąd jeśli identyfikator nie ma odpowiedniej długości
-
-    # Zapytanie po wszystkich dokumentach w kolekcji 'pojazdy'
-    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/pojazdy"
-    response = requests.get(url, headers=headers)
-    return response, pole
+        return None, "błąd"  # Błąd jeśli numer rejestracyjny nie ma odpowiedniej długości
 
 
 def fetch_interwencje_by_patrol(patrol_id):
