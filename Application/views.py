@@ -82,3 +82,12 @@ def formularz_osoba_view(request):
 
 def szukaj_wybor_view(request):
     return render(request, 'szukaj_wybor.html')
+
+def lista_osoby_pojazdy_view(request):
+    return render(request, 'lista_osoby_pojazdy.html')
+
+def dane_pojazd_view(request):
+    return render(request, 'dane_pojazd.html')
+
+def formularz_pojazd_view(request):
+    return render(request, 'formularz_pojazd.html')

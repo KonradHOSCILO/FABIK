@@ -1,11 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wyszukaj osobę</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interwencja</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Wyniki wyszukiwania osoby</h1>
-    <div id="wynik"></div>
+<body class="bg-light">
+    <div class="container mt-5">
+        
+        <!-- Karta z danymi -->
+        <div class="card shadow-sm border-0 rounded-3 p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-person-circle" style="font-size: 5rem; color: #0d6efd;"></i>
+                <h2>Dane Osoby</h2>
+            </div>
+
+            <table id="usersTable">
+            <tr>
+                <th>ID</th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>Data urodzenia</th>
+                <th>PESEL</th>
+            </tr>
+            </table>
+
+            <!-- Przycisk -->
+            <a href = "/strona_glowna.html" class="btn btn-primary w-100" role="button">Zakończ pomyślnie interwencję</a>
+       
+        </div>
+    
+    </div>
 
     <script>
         // Automatyczne pobranie danych osoby o PESEL 0111169100
@@ -27,5 +54,7 @@
                 }
             });
     </script>
+
 </body>
+
 </html>

@@ -8,7 +8,10 @@ from Application.views import (
     logowanie_view,  # Widok do logowania
     strona_glowna_view,  # Widok do wyświetlania strony głównej
     formularz_osoba_view,  # Widok do wyświetlania formularza osoby
-    szukaj_wybor_view
+    szukaj_wybor_view,
+    lista_osoby_pojazdy_view,
+    dane_pojazd_view,
+    formularz_pojazd_view
 )
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
@@ -22,5 +25,8 @@ urlpatterns = [
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
     path('formularz_osoba_html/', formularz_osoba_view, name='formularz_osoba_html'),
     path('szukaj_wybor_html/', szukaj_wybor_view, name='szukaj_wybor_html'),
+    path('lista_osoby_pojazdy_html/', szukaj_wybor_view, name='lista_osoby_pojazdy_html'),
+    path('dane_pojazd_html/', szukaj_wybor_view, name='dane_pojazd_html'),
+    path('formularz_pojazd_html/', szukaj_wybor_view, name='formularz_pojazd_html'),
 ]
 
