@@ -34,3 +34,4 @@ Thumbs.db
 # 🚫 Inne
 *.bak
 *.tmp
+db.sqlite3
