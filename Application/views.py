@@ -4,13 +4,16 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+from Application.firestore_fetch_data import fetch_patrol_status_by_username
 import requests
 
 import json
 
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
 from django.contrib import messages
+
+from google.cloud import firestore
+from django.views.decorators.csrf import csrf_exempt
 
 def patrol_login_view(request):
     if request.method == 'POST':
@@ -24,10 +27,59 @@ def patrol_login_view(request):
             messages.error(request, "Nieprawidłowy login lub hasło.")
     return render(request, 'logowanie.html')
 
+# [pozostałe widoki bez zmian...]
+
+@csrf_exempt  # wyłącz na produkcji, jeśli korzystasz z Django CSRF token!
+def set_patrol_status(request):
+    """
+    Obsługa zmiany i odczytywania statusu patrolu z Firestore po stronie serwera.
+    GET - odczytuje status bieżącego patrolu (na podstawie request.user)
+    POST - ustawia status bieżącego patrolu
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Brak autoryzacji"}, status=401)
+
+    db = firestore.Client()
+    username = request.user.username  # To będzie używane jako ID dokumentu patrolu
+
+    display_map = {
+        "wolny": "Wolny",
+        "w_drodze": "W drodze",
+        "awaria": "Awaria",
+        "poza_pojazdem": "Poza pojazdem"
+    }
+
+    try:
+        if request.method == "POST":
+            status = request.POST.get("status")
+            if not status:
+                return JsonResponse({"error": "Brak statusu"}, status=400)
+            doc_ref = db.collection("patrole").document(username)
+            doc_ref.set({"status": status}, merge=True)
+            return JsonResponse({
+                "status": "ok",
+                "patrol_status": status,
+                "display": display_map.get(status, status)
+            })
+
+        elif request.method == "GET":
+            doc_ref = db.collection("patrole").document(username)
+            doc = doc_ref.get()
+            if doc.exists:
+                status = doc.to_dict().get("status")
+            else:
+                status = None
+            return JsonResponse({
+                "status": "ok",
+                "patrol_status": status,
+                "display": display_map.get(status, "brak") if status else "brak"
+            })
+
+        return JsonResponse({"error": "Metoda niedozwolona"}, status=405)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
-
-# Widok odpowiedzialny za wyszukiwanie osoby na podstawie danych (pesel, imię, nazwisko, data urodzenia)
 def wyszukaj_osobe_view(request):
     pesel = request.GET.get("pesel")
     imie = request.GET.get("imie")
@@ -44,8 +96,6 @@ def wyszukaj_osobe_view(request):
         return JsonResponse({"error": "Nie znaleziono osoby"}, status=404)
 
 
-
-# Widok odpowiedzialny za wyszukiwanie pojazdu na podstawie identyfikatora, numeru rejestracyjnego lub VIN
 def wyszukaj_pojazd_view(request):
     identyfikator = request.GET.get("identyfikator")
 
@@ -59,7 +109,6 @@ def wyszukaj_pojazd_view(request):
         # Jeśli pojazd nie został znaleziony, zwróć błąd 404
         return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
 
-# Widok do wyświetlania danych osoby w formie HTML
 def rozpocznij_interwencje_view(request):
     if request.method == "POST":
         interwencja_id = create_interwencja_document()
@@ -94,24 +143,25 @@ def dodaj_pojazd_interwencja_view(request):
 
     return JsonResponse({"error": "Tylko POST"}, status=405)
 
-# Widok wyświetlający stronę historii (brak logiki w tym widoku)
 def historia_view(request):
     patrol_id = '601'  # Hardcodowane ID patrolu
     interwencje = fetch_interwencje_by_patrol(patrol_id)
     return render(request, 'historia.html', {'interwencje': interwencje})
 
 
-# Widok wyświetlający stronę główną
+# (USUNIĘTO BŁĘDNĄ DEFINICJĘ set_patrol_status TUTAJ)
+
 def strona_glowna_view(request):
-    return render(request, 'strona_glowna.html')
+    patrol_status = None
+    if request.user.is_authenticated:
+        patrol_status = fetch_patrol_status_by_username(request.user.username)
+    return render(request, 'strona_glowna.html', {
+        'patrol_status': patrol_status,
+    })
 
-
-# Widok odpowiedzialny za renderowanie strony logowania
 def logowanie_view(request):
     return render(request, 'logowanie.html')
 
-
-# Widok wyświetlający formularz do wprowadzania danych osoby
 def formularz_osoba_view(request):
     return render(request, 'szukaj_osoba_sposob.html')
 
@@ -120,6 +170,7 @@ def szukaj_osoba_pesel_view(request):
 
 def szukaj_osoba_dane_view(request):
     return render(request, 'szukaj_osoba_dane.html')
+
 def szukaj_wybor_view(request):
     return render(request, 'szukaj_wybor.html')
 

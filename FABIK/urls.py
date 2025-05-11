@@ -23,6 +23,7 @@ from Application.views import (
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
 urlpatterns = [
+    path('patrol/status/', views.set_patrol_status, name='set_patrol_status'),
     path('admin/', admin.site.urls),
     path('osoba/', wyszukaj_osobe_view, name='wyszukaj_osobe'),
     path('pojazd/', wyszukaj_pojazd_view, name='wyszukaj_pojazd'),
