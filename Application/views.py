@@ -120,16 +120,24 @@ def rozpocznij_interwencje_view(request):
             return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
     return HttpResponse("Nieprawidłowa metoda", status=405)
 
+from django.http import JsonResponse
+import json
+
 def dodaj_pojazd_interwencja_view(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             interwencja_id = data.get("interwencja_id")
             numer_rejestracyjny = data.get("numer_rejestracyjny")
-            if not interwencja_id or not numer_rejestracyjny:
+            numer_vin = data.get("numer_vin")
+
+            if not interwencja_id or (not numer_rejestracyjny and not numer_vin):
                 return JsonResponse({"error": "Brakuje danych"}, status=400)
 
-            sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny)
+            if numer_rejestracyjny:
+                sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny)
+            elif numer_vin:
+                sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_vin)
 
             if sukces:
                 return JsonResponse({"status": "ok"})
@@ -142,6 +150,7 @@ def dodaj_pojazd_interwencja_view(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Tylko POST"}, status=405)
+
 
 def historia_view(request):
     patrol_id = '601'  # Hardcodowane ID patrolu
@@ -162,7 +171,9 @@ def strona_glowna_view(request):
 def logowanie_view(request):
     return render(request, 'logowanie.html')
 
-def formularz_osoba_view(request):
+def szukaj_wybor_view(request):
+    return render(request, 'szukaj_wybor.html')
+def szukaj_osoba_sposob_view(request):
     return render(request, 'szukaj_osoba_sposob.html')
 
 def szukaj_osoba_pesel_view(request):
@@ -170,9 +181,15 @@ def szukaj_osoba_pesel_view(request):
 
 def szukaj_osoba_dane_view(request):
     return render(request, 'szukaj_osoba_dane.html')
+def szukaj_pojazd_sposob_view(request):
+    return render(request, 'szukaj_pojazd_sposob.html')
+def szukaj_pojazd_rej_view(request):
+    return render(request, 'szukaj_pojazd_rej.html')
+def szukaj_pojazd_vin_view(request):
+    return render(request, 'szukaj_pojazd_vin.html')
+def szukaj_osoba_dane_view(request):
+    return render(request, 'szukaj_osoba_dane.html')
 
-def szukaj_wybor_view(request):
-    return render(request, 'szukaj_wybor.html')
 
 def lista_osoby_pojazdy_view(request):
     return render(request, 'lista_osoby_pojazdy.html')

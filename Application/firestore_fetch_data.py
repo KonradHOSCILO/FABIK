@@ -10,6 +10,8 @@ from firebase_admin import credentials, firestore
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
+
+
 # Wczytujemy zmienne środowiskowe z .env, np. ścieżkę do klucza Google
 load_dotenv()
 
@@ -101,7 +103,7 @@ def create_interwencja_document():
     id_interwencji = generate_random_id()
     data_today = datetime.datetime.now().strftime('%Y-%m-%d')
     # Przykład nazwy dokumentu: 2024-06-05_a8GbH8d_601
-    document_name = f"{data_today}_{id_interwencji}_601"
+    document_name = f"{data_today}_{id_interwencji}_{user.username}"
 
     url = (
         f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje"
@@ -130,23 +132,50 @@ def create_interwencja_document():
         print(response.text)
         return None
 
-def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny):
-    """
-    Dodaje numer rejestracyjny pojazdu do już istniejącej interwencji.
-    Używa metody arrayUnion Firestore przez Admin SDK.
-    Zapobiega duplikatom w polu-array.
-    """
-    db = get_firestore_db()
-    doc_ref = db.collection('interwencje').document(interwencja_id)
+def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_vin=None):
+    db = firestore.Client()
+    pojazdy_ref = db.collection("pojazdy")
+    dokumenty = pojazdy_ref.list_documents()
+
+    pelna_nazwa = None
+
+    # Jeśli podano numer rejestracyjny, sprawdzamy, czy ID dokumentu zaczyna się od numeru rejestracyjnego
+    if numer_rejestracyjny:
+        for doc_ref in dokumenty:
+            doc_id = doc_ref.id
+            if doc_id.startswith(f"{numer_rejestracyjny}_"):
+                pelna_nazwa = doc_id
+                break
+
+    # Jeśli nie znaleziono pojazdu po numerze rejestracyjnym, sprawdzamy numer VIN
+    if not pelna_nazwa and numer_vin:
+        for doc_ref in dokumenty:
+            doc_id = doc_ref.id
+            print(f"Sprawdzam VIN: {numer_vin} w {doc_id}")  # Dodane logowanie
+
+            # Sprawdzamy, czy dokument zawiera numer VIN w dowolnej części ID
+            if numer_vin in doc_id:
+                pelna_nazwa = doc_id
+                break
+
+    if not pelna_nazwa:
+        blad = "Nie znaleziono pojazdu o podanym numerze rejestracyjnym lub VIN."
+        print(blad)
+        return False, blad
+
+    # Dodanie pojazdu do interwencji
     try:
-        doc_ref.update({
-            "pojazdy_biorace_udzial_w_interwencji": firestore.ArrayUnion([numer_rejestracyjny])
+        interwencja_ref = db.collection("interwencje").document(interwencja_id)
+        interwencja_ref.update({
+            "pojazdy_biorace_udzial_w_interwencji": firestore.ArrayUnion([pelna_nazwa])
         })
-        print("Pojazd został dodany.")
+        print(f"Dodano pojazd {pelna_nazwa} do interwencji {interwencja_id}.")
         return True, None
     except Exception as e:
-        print(f"Błąd: {str(e)}")
-        return False, str(e)
+        blad = f"Błąd podczas aktualizacji interwencji: {str(e)}"
+        print(blad)
+        return False, blad
+
 
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     """
