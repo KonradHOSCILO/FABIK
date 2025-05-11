@@ -10,44 +10,37 @@
     <h4 class="text-center fw-bold mb-4">Strona Główna</h4>
   </div>
 
-  <!-- Status patrolu START -->
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <div class="d-flex align-items-center flex-wrap">
-          <div>
-            <strong>Status patrolu {{ user.username }}:</strong>
-            <span id="patrol-status">Ładowanie...</span>
-          </div>
-          <div class="dropdown ms-3">
-            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              Zmień status
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
-              <li><a class="dropdown-item" href="#" onclick="setStatus('wolny'); return false;">Wolny</a></li>
-              <li><a class="dropdown-item" href="#" onclick="setStatus('w_drodze'); return false;">W drodze</a></li>
-              <li><a class="dropdown-item" href="#" onclick="setStatus('awaria'); return false;">Awaria</a></li>
-              <li><a class="dropdown-item" href="#" onclick="setStatus('poza_pojazdem'); return false;">Poza pojazdem</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Status patrolu END -->
-
-
   <!-- Kafelki -->
   <div class="card shadow p-4">
 
     <div class="row g-3">
 
+      <!-- Status patrolu przeniesiony tutaj zamiast napisu "W trakcie Dokumentacji" -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm">
           <div class="card-body">
-            <h6 class="fw-bold">W trakcie Dokumentacji</h6>
+            <div class="d-flex align-items-center flex-wrap">
+              <div>
+                <strong>Status patrolu {{ user.username }}:</strong>
+                <span id="patrol-status">Ładowanie...</span>
+              </div>
+              <div class="dropdown ms-3">
+                <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  Zmień status
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
+                  <li><a class="dropdown-item" href="#" onclick="setStatus('wolny'); return false;">Wolny</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="setStatus('w_drodze'); return false;">W drodze</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="setStatus('awaria'); return false;">Awaria</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="setStatus('poza_pojazdem'); return false;">Poza pojazdem</a></li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- Pozostawiamy drugi kafelek bez zmian -->
       <div class="col-md-6">
         <div class="card border-0 shadow-sm">
           <div class="card-body">
