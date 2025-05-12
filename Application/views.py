@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_plate, fetch_interwencje_by_patrol, create_interwencja_document, dodaj_pojazd_do_interwencji
+from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_plate_or_vin, fetch_interwencje_by_patrol, create_interwencja_document, dodaj_pojazd_do_interwencji, pobierz_osoby_i_pojazdy_z_interwencji
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from google.oauth2 import service_account
@@ -78,7 +78,29 @@ def set_patrol_status(request):
         return JsonResponse({"error": "Metoda niedozwolona"}, status=405)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+def rozpocznij_interwencje_view(request):
+    if request.method == "POST":
+        interwencja_id = create_interwencja_document()
+        if interwencja_id:
+            response = redirect("szukaj_wybor_html")
+            response.set_cookie("interwencja_id", interwencja_id)
+            return response
+        else:
+            return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
+    return HttpResponse("Nieprawidłowa metoda", status=405)
 
+from django.http import JsonResponse
+import json
+
+
+def pobierz_dane_interwencji_view(request):
+    interwencja_id = request.GET.get("id")
+    dane = pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id)
+
+    if "error" in dane:
+        return JsonResponse({"error": dane["error"]}, status=dane.get("status_code", 400))
+
+    return JsonResponse(dane)
 
 def wyszukaj_osobe_view(request):
     pesel = request.GET.get("pesel")
@@ -99,29 +121,12 @@ def wyszukaj_osobe_view(request):
 def wyszukaj_pojazd_view(request):
     identyfikator = request.GET.get("identyfikator")
 
-    # Wywołanie funkcji do pobrania pojazdu z bazy danych
-    response, tryb = fetch_vehicle_by_plate(identyfikator)
+    document, tryb = fetch_vehicle_by_plate_or_vin(identyfikator)
 
-    # Jeśli odpowiedź jest poprawna, zwróć dane pojazdu
-    if response and response.status_code == 200:
-        return JsonResponse(response.json())
+    if document:
+        return JsonResponse(document)
     else:
-        # Jeśli pojazd nie został znaleziony, zwróć błąd 404
         return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
-
-def rozpocznij_interwencje_view(request):
-    if request.method == "POST":
-        interwencja_id = create_interwencja_document()
-        if interwencja_id:
-            response = redirect("szukaj_wybor_html")
-            response.set_cookie("interwencja_id", interwencja_id)
-            return response
-        else:
-            return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
-    return HttpResponse("Nieprawidłowa metoda", status=405)
-
-from django.http import JsonResponse
-import json
 
 def dodaj_pojazd_interwencja_view(request):
     if request.method == "POST":
@@ -135,9 +140,15 @@ def dodaj_pojazd_interwencja_view(request):
                 return JsonResponse({"error": "Brakuje danych"}, status=400)
 
             if numer_rejestracyjny:
-                sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny)
+                sukces, blad = dodaj_pojazd_do_interwencji(
+                    interwencja_id=interwencja_id,
+                    numer_rejestracyjny=numer_rejestracyjny,
+                )
             elif numer_vin:
-                sukces, blad = dodaj_pojazd_do_interwencji(interwencja_id, numer_vin)
+                sukces, blad = dodaj_pojazd_do_interwencji(
+                    interwencja_id=interwencja_id,
+                    numer_vin=numer_vin,
+                )
 
             if sukces:
                 return JsonResponse({"status": "ok"})

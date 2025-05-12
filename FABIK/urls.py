@@ -11,6 +11,7 @@ from Application.views import (
     set_patrol_status,
 
     rozpocznij_interwencje_view,
+    pobierz_dane_interwencji_view,
     szukaj_wybor_view,
     szukaj_osoba_sposob_view,
     szukaj_osoba_pesel_view,
@@ -38,6 +39,7 @@ urlpatterns = [
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
 
     path('rozpocznij_interwencje/', rozpocznij_interwencje_view, name='rozpocznij_interwencje'),
+    path('pobierz_dane_interwencji/', pobierz_dane_interwencji_view, name='pobierz_dane_interwencji'),
     path('szukaj_wybor_html/', szukaj_wybor_view, name='szukaj_wybor_html'),
     path('szukaj_osoba_sposob_html/', szukaj_osoba_sposob_view, name='szukaj_osoba_sposob_html'),
     path('szukaj_osoba_pesel_html/', szukaj_osoba_pesel_view, name='szukaj_osoba_pesel_html'),

@@ -46,27 +46,72 @@
 
       <div id="dodanePojazdy" class="mt-4">
         <h5 class="text-center">Dodane pojazdy:</h5>
-        <div class="d-flex flex-wrap justify-content-center">
-          <!-- Pojazdy będą tutaj dynamicznie wyświetlane -->
+        <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow">
+          <!-- pojazdy zostaną dodane dynamicznie -->
         </div>
       </div>
 
-      <div class="mt-4">
-        <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
+      <!-- Dodane osoby -->
+      <div id="dodaneOsoby" class="mt-4">
+        <h5 class="text-center">Dodane osoby:</h5>
+        <div class="d-flex flex-wrap justify-content-center" id="listaOsob">
+          <!-- osoby zostaną dodane dynamicznie -->
+        </div>
+      </div>
+
+        <div class="mt-4">
+          <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
+        </div>
       </div>
     </div>
-  </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const dodanyPojazd = urlParams.get('dodany_pojazd');
-    if (dodanyPojazd) {
-      const dodanePojazdyDiv = document.querySelector('#dodanePojazdy .d-flex');
-      const pojazdElement = document.createElement('div');
-      pojazdElement.classList.add('alert', 'alert-info', 'm-1');
-      pojazdElement.innerText = `Pojazd dodany do interwencji: ${dodanyPojazd}`;
-      dodanePojazdyDiv.appendChild(pojazdElement);
+    function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+    const interwencjaId = getCookie("interwencja_id");
+
+  async function pobierzDaneInterwencji() {
+    if (!interwencjaId) return;
+
+    try {
+      const response = await fetch(`/pobierz_dane_interwencji?id=${interwencjaId}`);
+      const data = await response.json();
+
+      if (data.error) {
+        alert("Błąd: " + data.error);
+        return;
+      }
+
+      const listaPojazdow = document.getElementById("listaPojazdow");
+      const listaOsob = document.getElementById("listaOsob");
+
+      // Dodaj pojazdy
+      data.pojazdy.forEach(pojazd => {
+        const div = document.createElement("div");
+        div.classList.add("alert", "alert-info", "m-1");
+        div.textContent = pojazd;
+        listaPojazdow.appendChild(div);
+      });
+
+      // Dodaj osoby
+      data.osoby.forEach(osoba => {
+        const div = document.createElement("div");
+        div.classList.add("alert", "alert-success", "m-1");
+        div.textContent = osoba;
+        listaOsob.appendChild(div);
+      });
+
+    } catch (err) {
+      console.error("Błąd podczas pobierania danych:", err);
     }
+  }
+
+  pobierzDaneInterwencji();
+</script>
   </script>
 </body>
 

@@ -103,7 +103,7 @@ def create_interwencja_document():
     id_interwencji = generate_random_id()
     data_today = datetime.datetime.now().strftime('%Y-%m-%d')
     # Przykład nazwy dokumentu: 2024-06-05_a8GbH8d_601
-    document_name = f"{data_today}_{id_interwencji}_{user.username}"
+    document_name = f"{data_today}_{id_interwencji}_601"
 
     url = (
         f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje"
@@ -131,6 +131,29 @@ def create_interwencja_document():
     else:
         print(response.text)
         return None
+def pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id):
+    if not interwencja_id:
+        return {"error": "Brak ID interwencji"}
+
+    project_id, headers = get_credentials()
+    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje/{interwencja_id}"
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        return {"error": "Nie znaleziono interwencji", "status_code": response.status_code}
+
+    document = response.json()
+    fields = document.get("fields", {})
+
+    pojazdy = []
+    if "pojazdy_biorace_udzial_w_interwencji" in fields:
+        pojazdy = [el["stringValue"] for el in fields["pojazdy_biorace_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
+
+    osoby = []
+    if "pesele_osob_bioracych_udzial_w_interwencji" in fields:
+        osoby = [el["stringValue"] for el in fields["pesele_osob_bioracych_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
+
+    return {"pojazdy": pojazdy, "osoby": osoby}
 
 def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_vin=None):
     db = firestore.Client()
@@ -138,43 +161,38 @@ def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_
     dokumenty = pojazdy_ref.list_documents()
 
     pelna_nazwa = None
+    logi = []
 
-    # Jeśli podano numer rejestracyjny, sprawdzamy, czy ID dokumentu zaczyna się od numeru rejestracyjnego
     if numer_rejestracyjny:
         for doc_ref in dokumenty:
             doc_id = doc_ref.id
+            logi.append(f"Sprawdzam rejestrację: {numer_rejestracyjny} vs {doc_id}")
             if doc_id.startswith(f"{numer_rejestracyjny}_"):
                 pelna_nazwa = doc_id
                 break
 
-    # Jeśli nie znaleziono pojazdu po numerze rejestracyjnym, sprawdzamy numer VIN
     if not pelna_nazwa and numer_vin:
+        numer_vin = numer_vin.strip().upper()
         for doc_ref in dokumenty:
             doc_id = doc_ref.id
-            print(f"Sprawdzam VIN: {numer_vin} w {doc_id}")  # Dodane logowanie
-
-            # Sprawdzamy, czy dokument zawiera numer VIN w dowolnej części ID
-            if numer_vin in doc_id:
+            doc_id_upper = doc_id.strip().upper()
+            logi.append(f"Sprawdzam VIN: {numer_vin} vs {doc_id_upper}")
+            if doc_id_upper.endswith(f"_{numer_vin}"):
                 pelna_nazwa = doc_id
                 break
 
     if not pelna_nazwa:
-        blad = "Nie znaleziono pojazdu o podanym numerze rejestracyjnym lub VIN."
-        print(blad)
-        return False, blad
+        logi.append("Nie znaleziono pojazdu o podanym numerze rejestracyjnym lub VIN.")
+        return False, "\n".join(logi)
 
-    # Dodanie pojazdu do interwencji
     try:
         interwencja_ref = db.collection("interwencje").document(interwencja_id)
         interwencja_ref.update({
             "pojazdy_biorace_udzial_w_interwencji": firestore.ArrayUnion([pelna_nazwa])
         })
-        print(f"Dodano pojazd {pelna_nazwa} do interwencji {interwencja_id}.")
         return True, None
     except Exception as e:
-        blad = f"Błąd podczas aktualizacji interwencji: {str(e)}"
-        print(blad)
-        return False, blad
+        return False, f"Błąd podczas aktualizacji interwencji: {str(e)}"
 
 
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
@@ -213,22 +231,59 @@ def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_uro
         return matching
     return None
 
-def fetch_vehicle_by_plate(identyfikator):
+
+def fetch_vehicle_by_plate_or_vin(identyfikator):
     """
-    Wyszukuje pojazd w bazie na dwa sposoby:
-    1. Jeśli identyfikator ma 7 znaków - traktuje go jako numer rejestracyjny i szuka dokumentu o tej nazwie.
-    2. Inaczej - zwraca błąd (obsługa VIN/ID wymagałaby osobnej logiki).
-    Zwraca tuple (response, tryb_wyszukiwania).
+    Szuka pojazdu w kolekcji 'pojazdy' po polu 'tablica_rejestracyjna' lub 'vin'.
+    Najpierw próbuje po VIN jeśli długość to 17 znaków, w przeciwnym razie po rejestracji.
+    Jeśli pierwszy nie zadziała, próbuje alternatywnie.
     """
+    import requests
+
     project_id, headers = get_credentials()
-    if len(identyfikator) == 7:
-        # Wyszukaj pojazd po numerze rejestracyjnym
-        url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/pojazdy/{identyfikator}"
-        response = requests.get(url, headers=headers)
-        return response, "tablica_rejestracyjna"
+    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents:runQuery"
+
+    identyfikator = identyfikator.strip().upper()
+
+    def run_query(field_name):
+        query = {
+            "structuredQuery": {
+                "from": [{"collectionId": "pojazdy"}],
+                "where": {
+                    "fieldFilter": {
+                        "field": {"fieldPath": field_name},
+                        "op": "EQUAL",
+                        "value": {"stringValue": identyfikator}
+                    }
+                },
+                "limit": 1
+            }
+        }
+        response = requests.post(url, headers=headers, json=query)
+        if response.status_code == 200:
+            results = response.json()
+            for result in results:
+                if "document" in result:
+                    return result["document"], field_name
+        return None, None
+
+    # Pierwsza próba — VIN jeśli wygląda na VIN
+    if len(identyfikator) == 17:
+        document, field = run_query("vin")
+        if document:
+            return document, field
+        # Jeśli nie znaleziono, spróbuj jako tablica rejestracyjna
+        return run_query("tablica_rejestracyjna")
     else:
-        # Niewspierany tryb wyszukiwania w tej funkcji
-        return None, "błąd"
+        # Najpierw rejestracja
+        document, field = run_query("tablica_rejestracyjna")
+        if document:
+            return document, field
+        # Jeśli nie znaleziono, spróbuj jako VIN
+        return run_query("vin")
+
+    return None, "nie znaleziono"
+
 
 def fetch_interwencje_by_patrol(patrol_id):
     """
