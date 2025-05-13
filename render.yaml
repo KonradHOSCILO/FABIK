@@ -2,9 +2,14 @@ services:
   - type: web
     name: fabik
     env: python
-    buildCommand: ""
-    startCommand: "gunicorn FABIK.wsgi:application"
-    autoDeploy: true
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python manage.py migrate && gunicorn fabik.wsgi:application"
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: FABIK.settings
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fabik-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.10
+      - key: ALLOWED_HOSTS
+        value: fabik.onrender.com
