@@ -4,3 +4,6 @@ google-auth
 google-auth-oauthlib
 python-dotenv
 firebase-admin
+gunicorn
+dj-database-url
+whitenoise

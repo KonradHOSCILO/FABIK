@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fabik
+    env: python
+    buildCommand: ""
+    startCommand: "gunicorn FABIK.wsgi:application"
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: FABIK.settings
