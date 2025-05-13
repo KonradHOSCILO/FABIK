@@ -1,5 +1,13 @@
 from django.http import JsonResponse
-from Application.firestore_fetch_data import fetch_person_by_pesel_or_data, fetch_vehicle_by_plate_or_vin, fetch_interwencje_by_patrol, create_interwencja_document, dodaj_pojazd_do_interwencji, pobierz_osoby_i_pojazdy_z_interwencji
+from Application.firestore_fetch_data import (
+fetch_person_by_pesel_or_data,
+fetch_vehicle_by_plate_or_vin,
+fetch_interwencje_by_patrol,
+create_interwencja_document,
+dodaj_pojazd_do_interwencji,
+pobierz_osoby_i_pojazdy_z_interwencji,
+dodaj_osobe_do_interwencji)
+
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from google.oauth2 import service_account
@@ -161,6 +169,41 @@ def dodaj_pojazd_interwencja_view(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Tylko POST"}, status=405)
+
+def dodaj_osobe_interwencja_view(request):
+    if request.method == "POST":
+        try:
+            # Parsowanie danych z body
+            data = json.loads(request.body)
+            interwencja_id = data.get("interwencja_id")
+            pesel = data.get("pesel")
+            imie = data.get("imie")
+            nazwisko = data.get("nazwisko")
+            data_urodzenia = data.get("data_urodzenia")
+
+            if not interwencja_id or (not pesel and not (imie and nazwisko and data_urodzenia)):
+                return JsonResponse({"error": "Brakuje danych"}, status=400)
+
+            # Dodanie osoby do interwencji
+            sukces, blad = dodaj_osobe_do_interwencji(
+                interwencja_id=interwencja_id,
+                pesel=pesel,
+                imie=imie,
+                nazwisko=nazwisko,
+                data_urodzenia=data_urodzenia
+            )
+
+            if sukces:
+                return JsonResponse({"status": "ok"})
+            else:
+                return JsonResponse({"error": "Nie udało się dodać osoby do interwencji", "details": blad}, status=500)
+
+        except Exception as e:
+            print(f"Zdarzył się błąd: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Tylko POST"}, status=405)
+
 
 
 def historia_view(request):

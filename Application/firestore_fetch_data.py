@@ -194,6 +194,53 @@ def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_
     except Exception as e:
         return False, f"Błąd podczas aktualizacji interwencji: {str(e)}"
 
+def dodaj_osobe_do_interwencji(interwencja_id, pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
+    """
+    Dodaje osobę do interwencji na podstawie PESELu lub danych osobowych.
+    """
+    osoba = fetch_person_by_pesel_or_data(pesel, imie, nazwisko, data_urodzenia)
+
+    if not osoba:
+        return False, "Nie znaleziono osoby"
+
+    if isinstance(osoba, dict):
+        pesel_osoby = osoba.get("pesel")
+    elif isinstance(osoba, list) and len(osoba) == 1:
+        pesel_osoby = osoba[0].get("pesel")
+    else:
+        return False, "Znaleziono wiele osób – doprecyzuj dane"
+
+    if not pesel_osoby:
+        return False, "Nie udało się ustalić PESELu"
+
+    # Aktualizacja pola w interwencji
+    project_id, headers = get_credentials()
+    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje/{interwencja_id}"
+
+    payload = {
+        "fields": {
+            "pesele_osob_bioracych_udzial_w_interwencji": {
+                "arrayValue": {
+                    "values": [{"stringValue": pesel_osoby}]
+                }
+            }
+        }
+    }
+
+    params = {
+        "updateMask.fieldPaths": "pesele_osob_bioracych_udzial_w_interwencji",
+        "currentDocument.exists": "true"
+    }
+
+    response = requests.patch(url, headers=headers, json=payload, params=params)
+
+    if response.status_code not in (200, 204):
+        return False, "Nie udało się dodać osoby do interwencji"
+
+    return True, pesel_osoby
+
+
+
 
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     """
@@ -223,7 +270,7 @@ def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_uro
             format_firestore_fields(doc.get("fields", {}))
             for doc in all_docs
             if (
-                doc.get("fields", {}).get("imie", {}).get("stringValue", "").lower() == imie.lower()
+                doc.get("fields", {}).get("pierwsze_imie", {}).get("stringValue", "").lower() == imie.lower()
                 and doc.get("fields", {}).get("nazwisko", {}).get("stringValue", "").lower() == nazwisko.lower()
                 and doc.get("fields", {}).get("data_urodzenia", {}).get("stringValue", "") == data_urodzenia
             )

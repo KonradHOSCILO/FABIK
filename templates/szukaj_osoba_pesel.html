@@ -16,7 +16,7 @@
       <a href="/szukaj_osoba_sposob_html" class="btn bg-white shadow-sm border rounded-3 px-3">
         <i class="bi bi-arrow-left"></i>
       </a>
-      <h4 class="text-center flex-grow-1 fw-bold">Patrol X</h4>
+      <h4 class="text-center flex-grow-1 fw-bold">Patrol {{ user.username }}</h4>
     </div>
 
     <div class="card shadow p-4 border rounded-3">
@@ -31,8 +31,15 @@
         </div>
       </form>
       <div class="mt-4" id="peselWynik"></div>
+
+      <div class="mt-4 d-flex justify-content-center">
+        <button id="addPersonButton" class="btn btn-success">Dodaj osobę do interwencji</button>
+      </div>
+
     </div>
   </div>
+
+
 
   <script>
     document.getElementById("peselForm").addEventListener("submit", async function (e) {
@@ -120,6 +127,53 @@
         wynikDiv.innerHTML = `<div class='alert alert-warning'>Nie znaleziono osoby.</div>`;
       }
     });
+
+  document.getElementById("addPersonButton").addEventListener("click", async function () {
+    const pesel = document.getElementById("pesel").value.trim(); // lub inny input, zależnie od formularza
+    const interwencja_id = getCookie("interwencja_id");
+
+    if (!pesel) {
+      alert("Wprowadź PESEL osoby.");
+      return;
+    }
+
+    if (!interwencja_id) {
+      alert("Brak ID interwencji w ciasteczkach.");
+      return;
+    }
+
+    const payload = {
+      pesel,
+      interwencja_id
+    };
+
+    try {
+      const response = await fetch("/dodaj_osobe_interwencja/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (response.ok && result.status === "ok") {
+        alert("Osoba została dodana do interwencji.");
+      } else {
+        alert("Błąd: " + (result.error || "Nie udało się dodać osoby."));
+      }
+    } catch (error) {
+      console.error("Błąd żądania:", error);
+      alert("Wystąpił błąd przy dodawaniu osoby.");
+    }
+  });
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
   </script>
 
 </body>
