@@ -24,7 +24,7 @@
       <form id="pojazdForm">
         <div class="mb-3">
           <label for="numer_rejestracyjny" class="form-label fw-bold">Numer Rejestracyjny</label>
-          <input type="text" class="form-control" id="numer_rejestracyjny" placeholder="XY 12345" />
+          <input type="text" class="form-control" id="numer_rejestracyjny" placeholder="XY 12345" required/>
         </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Sprawdź</button>
@@ -160,7 +160,7 @@ document.getElementById("addVehicleButton").addEventListener("click", async func
 
     const result = await response.json();
     if (response.ok && result.status === "ok") {
-      alert("Pojazd został dodany do interwencji.");
+      window.location.href = "/szukaj_wybor_html";
     } else {
       alert("Błąd: " + (result.error || "Nie udało się dodać pojazdu." || result));
     }

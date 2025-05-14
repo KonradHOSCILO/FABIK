@@ -24,15 +24,15 @@
       <form id="osobaForm">
         <div class="mb-3">
           <label for="imie" class="form-label fw-bold">Imię</label>
-          <input type="text" class="form-control" id="imie" placeholder="Jan" />
+          <input type="text" class="form-control" id="imie" placeholder="Jan" required/>
         </div>
         <div class="mb-3">
           <label for="nazwisko" class="form-label fw-bold">Nazwisko</label>
-          <input type="text" class="form-control" id="nazwisko" placeholder="Kowalski" />
+          <input type="text" class="form-control" id="nazwisko" placeholder="Kowalski" required/>
         </div>
         <div class="mb-3">
           <label for="dataUrodzenia" class="form-label fw-bold">Data urodzenia</label>
-          <input type="text" class="form-control" id="dataUrodzenia" placeholder="YYYY-MM-DD" />
+          <input type="text" class="form-control" id="dataUrodzenia" placeholder="YYYY-MM-DD" required/>
         </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Sprawdź</button>
@@ -172,7 +172,7 @@
 
       const result = await response.json();
       if (response.ok && result.status === "ok") {
-        alert("Osoba została dodana do interwencji.");
+        window.location.href = "/szukaj_wybor_html";
       } else {
         alert("Błąd: " + (result.error || "Nie udało się dodać osoby."));
       }

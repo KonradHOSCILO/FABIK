@@ -97,9 +97,6 @@ def rozpocznij_interwencje_view(request):
             return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
     return HttpResponse("Nieprawidłowa metoda", status=405)
 
-from django.http import JsonResponse
-import json
-
 
 def pobierz_dane_interwencji_view(request):
     interwencja_id = request.GET.get("id")

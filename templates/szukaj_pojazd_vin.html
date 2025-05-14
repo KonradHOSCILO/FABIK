@@ -24,7 +24,7 @@
       <form id="pojazdForm">
         <div class="mb-3">
           <label for="numer_vin" class="form-label fw-bold">Numer VIN</label>
-          <input type="text" class="form-control" id="numer_vin" placeholder="1HGCM82633A123456" />
+          <input type="text" class="form-control" id="numer_vin" placeholder="1HGCM82633A123456" required/>
         </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Sprawdź</button>
@@ -159,7 +159,7 @@ document.getElementById("addVehicleButton").addEventListener("click", async func
 
     const result = await response.json();
     if (response.ok && result.status === "ok") {
-      alert("Pojazd został dodany do interwencji.");
+      window.location.href = "/szukaj_wybor_html";
     } else {
       alert("Błąd: " + (result.error || "Nie udało się dodać pojazdu." || result));
     }

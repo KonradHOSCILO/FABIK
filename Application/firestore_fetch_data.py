@@ -11,11 +11,9 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
 
-
-# Wczytujemy zmienne środowiskowe z .env, np. ścieżkę do klucza Google
 load_dotenv()
-
-_firestore_db = None  # Singleton na klienta Firestore; inicjalizujemy tylko raz
+_firestore_db = None
+db = firestore.Client()
 
 def get_firestore_db():
     """
@@ -156,7 +154,6 @@ def pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id):
     return {"pojazdy": pojazdy, "osoby": osoby}
 
 def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_vin=None):
-    db = firestore.Client()
     pojazdy_ref = db.collection("pojazdy")
     dokumenty = pojazdy_ref.list_documents()
 
@@ -196,7 +193,8 @@ def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_
 
 def dodaj_osobe_do_interwencji(interwencja_id, pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     """
-    Dodaje osobę do interwencji na podstawie PESELu lub danych osobowych.
+    Dodaje osobę do interwencji na podstawie PESELu lub danych osobowych,
+    aktualizując pole przez ArrayUnion (jak w pojazdach).
     """
     osoba = fetch_person_by_pesel_or_data(pesel, imie, nazwisko, data_urodzenia)
 
@@ -213,31 +211,14 @@ def dodaj_osobe_do_interwencji(interwencja_id, pesel=None, imie=None, nazwisko=N
     if not pesel_osoby:
         return False, "Nie udało się ustalić PESELu"
 
-    # Aktualizacja pola w interwencji
-    project_id, headers = get_credentials()
-    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje/{interwencja_id}"
-
-    payload = {
-        "fields": {
-            "pesele_osob_bioracych_udzial_w_interwencji": {
-                "arrayValue": {
-                    "values": [{"stringValue": pesel_osoby}]
-                }
-            }
-        }
-    }
-
-    params = {
-        "updateMask.fieldPaths": "pesele_osob_bioracych_udzial_w_interwencji",
-        "currentDocument.exists": "true"
-    }
-
-    response = requests.patch(url, headers=headers, json=payload, params=params)
-
-    if response.status_code not in (200, 204):
-        return False, "Nie udało się dodać osoby do interwencji"
-
-    return True, pesel_osoby
+    try:
+        interwencja_ref = db.collection("interwencje").document(interwencja_id)
+        interwencja_ref.update({
+            "pesele_osob_bioracych_udzial_w_interwencji": firestore.ArrayUnion([pesel_osoby])
+        })
+        return True, pesel_osoby
+    except Exception as e:
+        return False, f"Błąd podczas aktualizacji dokumentu: {e}"
 
 
 
