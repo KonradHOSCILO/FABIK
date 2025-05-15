@@ -262,16 +262,24 @@ def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_uro
 
 def fetch_vehicle_by_plate_or_vin(identyfikator):
     """
-    Szuka pojazdu w kolekcji 'pojazdy' po polu 'tablica_rejestracyjna' lub 'vin'.
-    Najpierw próbuje po VIN jeśli długość to 17 znaków, w przeciwnym razie po rejestracji.
+    Szuka pojazdu w kolekcji 'pojazdy' po identyfikatorze dokumentu,
+    a jeśli nie znajdzie, to próbuje po polu 'vin' (jeśli długość 17) lub 'tablica_rejestracyjna'.
     Jeśli pierwszy nie zadziała, próbuje alternatywnie.
     """
     import requests
 
     project_id, headers = get_credentials()
-    url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents:runQuery"
-
     identyfikator = identyfikator.strip().upper()
+
+    # Najpierw próbujemy pobrać dokument bezpośrednio po identyfikatorze
+    doc_url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/pojazdy/{identyfikator}"
+    doc_response = requests.get(doc_url, headers=headers)
+
+    if doc_response.status_code == 200:
+        return format_firestore_fields(doc_response.json().get("fields", {})), "documentId"
+
+    # Jeśli nie znaleziono dokumentu, próbujemy filtrować
+    query_url = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents:runQuery"
 
     def run_query(field_name):
         query = {
@@ -287,7 +295,7 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
                 "limit": 1
             }
         }
-        response = requests.post(url, headers=headers, json=query)
+        response = requests.post(query_url, headers=headers, json=query)
         if response.status_code == 200:
             results = response.json()
             for result in results:
@@ -295,19 +303,16 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
                     return result["document"], field_name
         return None, None
 
-    # Pierwsza próba — VIN jeśli wygląda na VIN
+    # Próba VIN → tablica lub odwrotnie
     if len(identyfikator) == 17:
         document, field = run_query("vin")
         if document:
             return document, field
-        # Jeśli nie znaleziono, spróbuj jako tablica rejestracyjna
         return run_query("tablica_rejestracyjna")
     else:
-        # Najpierw rejestracja
         document, field = run_query("tablica_rejestracyjna")
         if document:
             return document, field
-        # Jeśli nie znaleziono, spróbuj jako VIN
         return run_query("vin")
 
     return None, "nie znaleziono"

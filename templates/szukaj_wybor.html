@@ -46,73 +46,130 @@
 
       <div id="dodanePojazdy" class="mt-4">
         <h5 class="text-center">Dodane pojazdy:</h5>
-        <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow">
-          <!-- pojazdy zostaną dodane dynamicznie -->
-        </div>
+        <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
       </div>
 
-      <!-- Dodane osoby -->
       <div id="dodaneOsoby" class="mt-4">
         <h5 class="text-center">Dodane osoby:</h5>
-        <div class="d-flex flex-wrap justify-content-center" id="listaOsob">
-          <!-- osoby zostaną dodane dynamicznie -->
-        </div>
+        <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
       </div>
 
-        <div class="mt-4">
-          <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
-        </div>
+      <div class="mt-4">
+        <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
       </div>
     </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 1000;" onclick="zamknijModal()"></div>
+
+  <div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; padding:20px; border-radius:10px; z-index:1001; max-width:90%; min-width:300px;">
+    <h5 id="modalTresc">Dane</h5>
+  </div>
 
   <script>
     function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
 
     const interwencjaId = getCookie("interwencja_id");
 
-  async function pobierzDaneInterwencji() {
-    if (!interwencjaId) return;
+    async function pobierzDaneInterwencji() {
+      if (!interwencjaId) return;
 
-    try {
-      const response = await fetch(`/pobierz_dane_interwencji?id=${interwencjaId}`);
-      const data = await response.json();
+      try {
+        const response = await fetch(`/pobierz_dane_interwencji?id=${interwencjaId}`);
+        const data = await response.json();
 
-      if (data.error) {
-        alert("Błąd: " + data.error);
-        return;
+        if (data.error) {
+          alert("Błąd: " + data.error);
+          return;
+        }
+
+        const listaPojazdow = document.getElementById("listaPojazdow");
+        const listaOsob = document.getElementById("listaOsob");
+
+        data.pojazdy.forEach(pojazd => {
+          const div = document.createElement("div");
+          div.classList.add("alert", "alert-info", "m-1");
+          div.textContent = pojazd;
+          div.id = pojazd;
+          div.style.cursor = "pointer";
+          div.onclick = () => pokazDanePojazdu(pojazd);
+          listaPojazdow.appendChild(div);
+        });
+
+        data.osoby.forEach(pesel => {
+          const div = document.createElement("div");
+          div.classList.add("alert", "alert-success", "m-1");
+          div.textContent = pesel;
+          div.id = pesel;
+          div.style.cursor = "pointer";
+          div.onclick = () => pokazDaneOsoby(pesel);
+          listaOsob.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Błąd podczas pobierania danych:", err);
       }
-
-      const listaPojazdow = document.getElementById("listaPojazdow");
-      const listaOsob = document.getElementById("listaOsob");
-
-      // Dodaj pojazdy
-      data.pojazdy.forEach(pojazd => {
-        const div = document.createElement("div");
-        div.classList.add("alert", "alert-info", "m-1");
-        div.textContent = pojazd;
-        listaPojazdow.appendChild(div);
-      });
-
-      // Dodaj osoby
-      data.osoby.forEach(osoba => {
-        const div = document.createElement("div");
-        div.classList.add("alert", "alert-success", "m-1");
-        div.textContent = osoba;
-        listaOsob.appendChild(div);
-      });
-
-    } catch (err) {
-      console.error("Błąd podczas pobierania danych:", err);
     }
-  }
 
-  pobierzDaneInterwencji();
-</script>
+    async function pokazDaneOsoby(pesel) {
+      try {
+        const response = await fetch(`/osoba/?pesel=${pesel}`);
+        const data = await response.json();
+
+        if (data.length > 0) {
+          const osoba = data[0];
+          let html = "<strong>Dane osoby:</strong><br><br>";
+          for (const [key, value] of Object.entries(osoba)) {
+            html += `<strong>${key}:</strong> ${value}<br>`;
+          }
+          pokazModal(html);
+        } else {
+          pokazModal("Nie znaleziono osoby.");
+        }
+      } catch (err) {
+        pokazModal("Błąd podczas pobierania danych osoby.");
+      }
+    }
+
+    async function pokazDanePojazdu(identyfikator) {
+      try {
+        const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
+        const data = await response.json();
+
+        if (!data.error) {
+          let html = "<strong>Dane pojazdu:</strong><br><br>";
+          for (const [key, value] of Object.entries(data)) {
+            html += `<strong>${key}:</strong> ${value}<br>`;
+          }
+          pokazModal(html);
+        } else {
+          pokazModal("Nie znaleziono pojazdu.");
+        }
+      } catch (err) {
+        pokazModal("Błąd podczas pobierania danych pojazdu.");
+      }
+    }
+
+    function pokazModal(tresc) {
+      document.getElementById("modalTresc").innerHTML = tresc;
+      document.getElementById("overlay").style.display = "block";
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function zamknijModal() {
+      document.getElementById("overlay").style.display = "none";
+      document.getElementById("modal").style.display = "none";
+    }
+
+    pobierzDaneInterwencji();
   </script>
-</body>
 
+</body>
 </html>
