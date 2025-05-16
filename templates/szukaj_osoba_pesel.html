@@ -21,7 +21,7 @@
 
     <div class="card shadow p-4 border rounded-3">
       <h5 class="text-center mb-3">Wyszukiwanie po PESEL</h5>
-      <form id="peselForm">
+      <form id="peselForm" {% url 'szukaj_osoba_pesel_html' %}>
         <div class="mb-3">
           <label for="pesel" class="form-label fw-bold">PESEL</label>
           <input type="text" class="form-control" id="pesel" placeholder="12345678901" required/>

@@ -22,6 +22,7 @@ from Application.views import (
     dodaj_pojazd_interwencja_view,
     dodaj_osobe_interwencja_view,
     notatka_view,
+    zakoncz_interwencje_view,
 
     historia_view,
     lista_osoby_pojazdy_view,
@@ -35,6 +36,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('osoba/', wyszukaj_osobe_view, name='wyszukaj_osobe'),
     path('pojazd/', wyszukaj_pojazd_view, name='wyszukaj_pojazd'),
+    path('zakoncz_notatke/', zakoncz_interwencje_view, name='zakoncz_notatke'),
 
     path('logowanie/', patrol_login_view, name='patrol_login'),
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
@@ -51,6 +53,7 @@ urlpatterns = [
     path('dodaj_pojazd_interwencja/', dodaj_pojazd_interwencja_view, name='dodaj_pojazd_interwencja'),
     path('dodaj_osobe_interwencja/', dodaj_osobe_interwencja_view, name='dodaj_osobe_interwencja'),
     path('notatka_html/', notatka_view, name='notatka_html'),
+
 
     path('historia_html/', historia_view, name='historia_html'),
     path('lista_osoby_pojazdy_html/', lista_osoby_pojazdy_view, name='lista_osoby_pojazdy_html'),

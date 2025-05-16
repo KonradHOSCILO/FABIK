@@ -1,7 +1,7 @@
 import os
 import random
 import string
-import datetime
+from datetime import datetime
 import requests
 from dotenv import load_dotenv
 
@@ -91,7 +91,7 @@ def fetch_patrol_status_by_username(username):
         return doc.to_dict().get("status", None)
     return None
 
-def create_interwencja_document():
+def create_interwencja_document(numer_patrolu):
     """
     Tworzy nowy dokument 'interwencja' w Firestore (kolekcja 'interwencje') z unikalnym ID i domyślnymi danymi.
     Komunikuje się przez REST API, korzysta z headera z tokenem Google.
@@ -99,9 +99,9 @@ def create_interwencja_document():
     """
     project_id, headers = get_credentials()
     id_interwencji = generate_random_id()
-    data_today = datetime.datetime.now().strftime('%Y-%m-%d')
-    # Przykład nazwy dokumentu: 2024-06-05_a8GbH8d_601
-    document_name = f"{data_today}_{id_interwencji}_601"
+    data_today = datetime.now().strftime('%Y-%m-%d')
+
+    document_name = f"{data_today}_{id_interwencji}_{numer_patrolu}"
 
     url = (
         f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/interwencje"
@@ -111,10 +111,11 @@ def create_interwencja_document():
     # Payload z gotowymi polami interwencji
     payload = {
         "fields": {
+            "data_rozpoczęcia": {"stringValue": datetime.now().strftime('%Y-%m-%d %H:%M:%S')},
             "data_wysłania": {"stringValue": ""},
             "id_notatki": {"stringValue": id_interwencji},
-            "patrol_wysylajacy": {"stringValue": "601"},
-            "pesele_osob_biaracych_udzial_w_interwencji": {"arrayValue": {"values": []}},
+            "patrol_wysylajacy": {"stringValue": numer_patrolu},
+            "pesele_osob_bioracych_udzial_w_interwencji": {"arrayValue": {"values": []}},
             "pojazdy_biorace_udzial_w_interwencji": {"arrayValue": {"values": []}},
             "notatka": {"stringValue": ""},
             "status": {"stringValue": "w toku"}
@@ -316,6 +317,20 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
         return run_query("vin")
 
     return None, "nie znaleziono"
+
+
+def zakoncz_interwencje(interwencja_id, notatka):
+    try:
+        interwencja_ref = db.collection("interwencje").document(interwencja_id)
+
+        interwencja_ref.update({
+            "data_wysłania": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "notatka": notatka,
+            "status": "zakończona"
+        })
+        return True, None
+    except Exception as e:
+        return False, f"Błąd podczas aktualizacji dokumentu: {e}"
 
 
 def fetch_interwencje_by_patrol(patrol_id):

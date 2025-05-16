@@ -17,25 +17,31 @@
       <a href="/szukaj_wybor_html" class="btn bg-white shadow-sm border rounded-3 px-3">
         <i class="bi bi-arrow-left"></i>
       </a>
-      <h4 class="text-center flex-grow-1 fw-bold">Patrol X</h4>
+      <h4 class="text-center flex-grow-1 fw-bold">Patrol {{user.username}}</h4>
     </div>
 
     <div class="card shadow p-4 border rounded-3">
       <h3 class="text-center mb-4">Notatka Interwencji</h3>
 
       <form id="notatkaForm">
-        <div class="mb-3">
-          <label for="numer_interwencji" class="form-label fw-bold">Numer Interwencji</label>
-          <input type="text" class="form-control" id="numer_interwencji" placeholder="Numer Interwencji" />
-        </div>
 
         <div class="mb-3">
           <label for="notatka" class="form-label fw-bold">Treść Notatki</label>
-          <textarea class="form-control" id="notatka" rows="4" placeholder="Wpisz treść notatki..."></textarea>
+          <textarea class="form-control" id="notatka" rows="4" placeholder="Wpisz treść notatki..."  required></textarea>
+        </div>
+
+        <div id="dodanePojazdy" class="mt-4">
+          <h5 class="text-center">Dodane pojazdy:</h5>
+          <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
+        </div>
+
+        <div id="dodaneOsoby" class="mt-4">
+          <h5 class="text-center">Dodane osoby:</h5>
+          <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
         </div>
 
         <div class="d-grid">
-          <button type="submit" class="btn btn-primary">Zapisz Notatkę</button>
+          <button type="submit" class="btn btn-primary">Zapisz notatkę i zakończ interwencję</button>
         </div>
       </form>
 
@@ -43,45 +49,217 @@
     </div>
   </div>
 
-  <script>
-    document.getElementById("notatkaForm").addEventListener("submit", function (e) {
-      e.preventDefault();
 
-      const numer_interwencji = document.getElementById("numer_interwencji").value.trim();
+  <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 1000;" onclick="zamknijModal()"></div>
+
+  <div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    background:white; padding:20px; border-radius:10px; z-index:1001; max-width:90%; min-width:300px;">
+    <h5 id="modalTresc">Dane</h5>
+  </div>
+  <script>
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    const interwencjaId = getCookie("interwencja_id");
+
+     document.getElementById("notatkaForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
       const notatka = document.getElementById("notatka").value.trim();
 
-      if (!numer_interwencji || !notatka) {
-        document.getElementById("notatkaStatus").innerHTML = "<div class='alert alert-danger'>Proszę wypełnić wszystkie pola!</div>";
+      if (!interwencjaId || !notatka) {
+        document.getElementById("notatkaStatus").innerHTML = "<div class='alert alert-danger'>Proszę wypełnić treść notatki!</div>";
         return;
       }
 
-      // Zakładając, że zapisujemy notatkę na serwerze
-      // Możesz dodać kod do przesyłania formularza do backendu lub lokalnego przechowywania
-      const data = { numer_interwencji, notatka };
+      const payload = {
+        interwencja_id: interwencjaId,
+        notatka: notatka
+      };
 
-      // Załóżmy, że wykonujemy zapytanie do backendu
-      fetch("/zapisz_notatke", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-        .then((response) => response.json())
-        .then((responseData) => {
-          if (responseData.success) {
-            document.getElementById("notatkaStatus").innerHTML =
-              "<div class='alert alert-success'>Notatka została zapisana pomyślnie!</div>";
-          } else {
-            document.getElementById("notatkaStatus").innerHTML =
-              "<div class='alert alert-danger'>Wystąpił błąd podczas zapisywania notatki. Spróbuj ponownie.</div>";
-          }
-        })
-        .catch((error) => {
-          document.getElementById("notatkaStatus").innerHTML =
-            "<div class='alert alert-danger'>Wystąpił błąd. Spróbuj ponownie.</div>";
+      try {
+        const response = await fetch("/zakoncz_notatke/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+          },
+          body: JSON.stringify(payload)
         });
-    });
+
+        const result = await response.json();
+      if (response.ok && result.status === "ok") {
+        window.location.href = "/strona_glowna_html";
+      } else {
+        alert("Błąd: " + (result.error || "Nie udało się zakończyć interwencji, spróbuj ponownie."));
+      }
+    } catch (error) {
+      console.error("Błąd żądania:", error);
+      alert("Wystąpił błąd przy dodawaniu notatki.");
+    }
+  });
+
+    const pojazdKeys = {
+      "typ_pojazdu": "Typ pojazdu",
+      "samochód_ciężarowy": "Samochód ciężarowy",
+      "dopuszczalny_nacisk_osi": "Dopuszczalny nacisk osi",
+      "pesel_wlasciciela": "PESEL właściciela",
+      "czy_badanie_techniczne": "Czy badanie techniczne wykonane",
+      "nazwisko_wlasciciela": "Nazwisko właściciela",
+      "rocznik": "Rocznik",
+      "masa_wlasna": "Masa własna",
+      "data_pierwszej_rejestracji": "Data pierwszej rejestracji",
+      "vin": "Numer VIN",
+      "masa_dopuszczalna": "Masa dopuszczalna",
+      "tablica_rejestracyjna": "Tablica rejestracyjna",
+      "czy_ma_hak": "Czy ma hak",
+      "utracony": "Utracony",
+      "moc_kW": "Moc (kW)",
+      "czy_ma_lpg": "Czy ma LPG",
+      "data_waznosci_badania": "Data ważności badania technicznego",
+      "czy_badanie_techniczne_wazne": "Czy badanie techniczne ważne",
+      "nadwozie": "Rodzaj nadwozia",
+      "marka": "Marka",
+      "kolor": "Kolor",
+      "czy_ubezpieczony": "Czy ubezpieczony",
+      "imie_wlasciciela": "Imię właściciela",
+      "nr_dowodu_rejestracyjnego": "Numer dowodu rejestracyjnego",
+      "moc_KM": "Moc (KM)",
+      "data_waznosci_ubezpieczenia": "Data ważności ubezpieczenia",
+      "rodzaj_paliwa": "Rodzaj paliwa",
+      "model": "Model",
+      "dozwolona_ilosc_osob": "Dozwolona ilość osób"
+    };
+
+    const osobaKeys = {
+      pierwsze_imie: "Imię",
+      drugie_imie: "Drugie imię",
+      nazwisko: "Nazwisko",
+      nazwisko_rodowe: "Nazwisko rodowe",
+      imie_ojca: "Imię ojca",
+      imie_matki: "Imię matki",
+      nazwisko_rodowe_matki: "Nazwisko rodowe matki",
+      data_urodzenia: "Data urodzenia",
+      miejsce_urodzenia: "Miejsce urodzenia",
+      pesel: "PESEL",
+      adres_zamieszkania: "Adres zamieszkania",
+      nr_do: "Numer dowodu osobistego",
+      kto_wydal_do: "Organ wydający dowodu",
+      data_waznosci_do: "Ważność dowodu",
+      czy_do_wazny: "Czy dowód osobisty ważny",
+      status_do: "Status dowodu osobistego",
+      numer_pj: "Numer prawa jazdy",
+      data_waznosci_pj: "Ważność prawa jazdy",
+      status_pj: "Status prawa jazdy",
+      ilosc_punktow_karnych: "Ilość punktów karnych",
+      kategorie_uprawnien: "Kategorie uprawnień",
+      wymagania: "Wymagania",
+      poszukiwana: "Osoba poszukiwana"
+    };
+
+    async function pobierzDaneInterwencji() {
+      if (!interwencjaId) return;
+
+      try {
+        const response = await fetch(`/pobierz_dane_interwencji/?id=${interwencjaId}`);
+        const data = await response.json();
+
+        if (data.error) {
+          alert("Błąd: " + data.error);
+          return;
+        }
+
+        const listaPojazdow = document.getElementById("listaPojazdow");
+        const listaOsob = document.getElementById("listaOsob");
+
+        listaPojazdow.innerHTML = ''; // Wyczyść poprzednie dane
+        data.pojazdy.forEach(pojazd => {
+          const div = document.createElement("div");
+          div.classList.add("alert", "alert-info", "m-1");
+          div.textContent = pojazd;
+          div.id = pojazd;
+          div.style.cursor = "pointer";
+          div.onclick = () => pokazDanePojazdu(pojazd);
+          listaPojazdow.appendChild(div);
+        });
+
+        listaOsob.innerHTML = ''; // Wyczyść poprzednie dane
+        data.osoby.forEach(pesel => {
+          const div = document.createElement("div");
+          div.classList.add("alert", "alert-success", "m-1");
+          div.textContent = pesel;
+          div.id = pesel;
+          div.style.cursor = "pointer";
+          div.onclick = () => pokazDaneOsoby(pesel);
+          listaOsob.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Błąd podczas pobierania danych:", err);
+      }
+    }
+
+    async function pokazDaneOsoby(pesel) {
+      try {
+        const response = await fetch(`/osoba/?pesel=${pesel}`);
+        const data = await response.json();
+
+        if (data.length > 0) {
+          const osoba = data[0];
+          let html = "<strong>Dane osoby:</strong><br><br>";
+
+          for (const key of Object.keys(osobaKeys)) {
+            if (osoba[key] !== undefined) {
+              html += `<strong>${osobaKeys[key]}:</strong> ${osoba[key]}<br>`;
+            }
+          }
+
+          pokazModal(html);
+        } else {
+          pokazModal("Nie znaleziono osoby.");
+        }
+      } catch (err) {
+        pokazModal("Błąd podczas pobierania danych osoby.");
+      }
+    }
+
+    async function pokazDanePojazdu(identyfikator) {
+      try {
+        const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
+        const data = await response.json();
+
+        if (!data.error) {
+          let html = "<strong>Dane pojazdu:</strong><br><br>";
+
+          for (const key of Object.keys(pojazdKeys)) {
+            if (data[key] !== undefined) {
+              html += `<strong>${pojazdKeys[key]}:</strong> ${data[key]}<br>`;
+            }
+          }
+
+          pokazModal(html);
+        } else {
+          pokazModal("Nie znaleziono pojazdu.");
+        }
+      } catch (err) {
+        pokazModal("Błąd podczas pobierania danych pojazdu.");
+      }
+    }
+
+    function pokazModal(tresc) {
+      document.getElementById("modalTresc").innerHTML = tresc;
+      document.getElementById("overlay").style.display = "block";
+      document.getElementById("modal").style.display = "block";
+    }
+
+    function zamknijModal() {
+      document.getElementById("overlay").style.display = "none";
+      document.getElementById("modal").style.display = "none";
+    }
+
+    pobierzDaneInterwencji();
   </script>
 
 </body>

@@ -6,7 +6,8 @@ fetch_interwencje_by_patrol,
 create_interwencja_document,
 dodaj_pojazd_do_interwencji,
 pobierz_osoby_i_pojazdy_z_interwencji,
-dodaj_osobe_do_interwencji)
+dodaj_osobe_do_interwencji,
+zakoncz_interwencje)
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -88,7 +89,8 @@ def set_patrol_status(request):
         return JsonResponse({"error": str(e)}, status=500)
 def rozpocznij_interwencje_view(request):
     if request.method == "POST":
-        interwencja_id = create_interwencja_document()
+        numer_patrolu = request.user.username
+        interwencja_id = create_interwencja_document(numer_patrolu)
         if interwencja_id:
             response = redirect("szukaj_wybor_html")
             response.set_cookie("interwencja_id", interwencja_id)
@@ -201,7 +203,33 @@ def dodaj_osobe_interwencja_view(request):
 
     return JsonResponse({"error": "Tylko POST"}, status=405)
 
+def zakoncz_interwencje_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            interwencja_id = data.get("interwencja_id")
+            notatka = data.get("notatka")
 
+            if not interwencja_id or not notatka:
+                return JsonResponse({"error": "Brakuje danych"}, status=400)
+
+            sukces, blad = zakoncz_interwencje(
+                interwencja_id=interwencja_id,
+                notatka=notatka,
+            )
+
+            if sukces:
+                response = JsonResponse({"status": "ok"})
+                response.delete_cookie("interwencja_id")  # Usuń ciasteczko z obiektu odpowiedzi
+                return response
+            else:
+                return JsonResponse({"error": "Nie udało się zakończyć interwencji", "details": blad}, status=500)
+
+        except Exception as e:
+            print(f"Zdarzył się błąd: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Tylko POST"}, status=405)
 
 def historia_view(request):
     patrol_id = '601'  # Hardcodowane ID patrolu
@@ -240,7 +268,8 @@ def szukaj_pojazd_vin_view(request):
     return render(request, 'szukaj_pojazd_vin.html')
 def szukaj_osoba_dane_view(request):
     return render(request, 'szukaj_osoba_dane.html')
-
+def notatka_view(request):
+    return render(request, 'notatka.html')
 
 def lista_osoby_pojazdy_view(request):
     return render(request, 'lista_osoby_pojazdy.html')
