@@ -10,18 +10,21 @@ dodaj_osobe_do_interwencji,
 zakoncz_interwencje)
 
 from django.shortcuts import render, redirect
+from google.cloud import firestore
 from django.http import HttpResponse
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from Application.firestore_fetch_data import fetch_patrol_status_by_username
 import requests
+import datetime
 
 import json
 
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 
-from google.cloud import firestore
+import firebase_admin
+from firebase_admin import credentials, firestore
 from django.views.decorators.csrf import csrf_exempt
 
 def patrol_login_view(request):
@@ -234,7 +237,7 @@ def zakoncz_interwencje_view(request):
 def historia_view(request):
     patrol_id = '601'  # Hardcodowane ID patrolu
     interwencje = fetch_interwencje_by_patrol(patrol_id)
-    return render(request, 'historia.html', {'interwencje': interwencje})
+    return render(request, 'historia_html.html', {'interwencje': interwencje})
 
 
 # (USUNIĘTO BŁĘDNĄ DEFINICJĘ set_patrol_status TUTAJ)
@@ -282,3 +285,92 @@ def formularz_pojazd_view(request):
 
 def notatka_view(request):
     return render(request, 'notatka.html')
+
+# Inicjalizacja Firebase (tylko raz)
+if not firebase_admin._apps:
+    cred = credentials.Certificate("credentials.json")
+    firebase_admin.initialize_app(cred)
+
+# Widok: historia interwencji
+def historia_interwencji(request):
+    db = firestore.client()
+    historia = []
+
+    user_id = str(request.user.username)
+    wybrany_patrol = request.GET.get("patrol")
+
+    # Dobierz odpowiednie zapytanie w zależności od użytkownika
+    if user_id == "dyzurny":
+        if wybrany_patrol:
+            query = db.collection("interwencje").where("patrol_wysylajacy", "==", wybrany_patrol)
+        else:
+            query = db.collection("interwencje")
+    else:
+        query = db.collection("interwencje").where("patrol_wysylajacy", "==", user_id)
+
+    # Pobierz wszystkie interwencje z zapytania
+    wszystkie = query.stream()
+
+    # Filtrowanie i sortowanie po stronie Pythona
+    interwencje_z_data = []
+    for doc in wszystkie:
+        dane = doc.to_dict()
+        data_rozp = dane.get("data_rozpoczęcia")
+        if data_rozp:  # pomijaj jeśli brak daty rozpoczęcia
+            interwencje_z_data.append((doc.id, data_rozp))
+
+    # Sortowanie malejąco (najnowsze najpierw)
+    interwencje_z_data.sort(key=lambda x: x[1], reverse=True)
+
+    for doc_id, data_rozp in interwencje_z_data:
+        historia.append({
+            "id": doc_id,
+            "czas": data_rozp
+        })
+
+    lista_patroli = ["601", "602", "603", "admin", "dyzurny"]
+
+    return render(request, "historia_html.html", {
+        "historia": historia,
+        "user_id": user_id,
+        "lista_patroli": lista_patroli,
+        "wybrany_patrol": wybrany_patrol
+    })
+
+    # Przykładowa lista dostępnych patroli — możesz to dynamicznie generować z bazy
+    lista_patroli = ["601", "602", "603", "admin", "dyzurny"]
+
+    return render(request, "historia_html.html", {
+        "historia": historia,
+        "user_id": user_id,
+        "lista_patroli": lista_patroli,
+        "wybrany_patrol": wybrany_patrol
+    })
+
+# Widok: szczegóły jednej interwencji
+def szczegoly_interwencji_api(request, interwencja_id):
+    db = firestore.client()
+    doc = db.collection("interwencje").document(interwencja_id).get()
+    if doc.exists:
+        dane = doc.to_dict()
+        return JsonResponse({
+            "notatka": dane.get("notatka", ""),
+            "status": dane.get("status", ""),
+            "pesele": dane.get("pesele_osob_bioracych_udzial_w_interwencji", []),
+            "pojazdy": dane.get("pojazdy_biorace_udzial_w_interwencji", [])
+        })
+    return JsonResponse({"error": "Nie znaleziono"}, status=404)
+
+def szczegoly_osoby_api(request, pesel):
+    db = firestore.client()
+    doc = db.collection("osoby").document(pesel).get()
+    if doc.exists:
+        return JsonResponse(doc.to_dict())
+    return JsonResponse({"error": "Nie znaleziono osoby"}, status=404)
+
+def szczegoly_pojazdu_api(request, rejestracja):
+    db = firestore.client()
+    doc = db.collection("pojazdy").document(rejestracja).get()
+    if doc.exists:
+        return JsonResponse(doc.to_dict())
+    return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)

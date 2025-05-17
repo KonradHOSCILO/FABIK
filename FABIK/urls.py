@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
+from Application.views import historia_interwencji, szczegoly_interwencji_api
 from Application import views
 from Application.views import patrol_login_view
 from Application.views import (
@@ -9,6 +10,7 @@ from Application.views import (
     patrol_login_view,
     strona_glowna_view,
     set_patrol_status,
+
 
     rozpocznij_interwencje_view,
     pobierz_dane_interwencji_view,
@@ -27,6 +29,9 @@ from Application.views import (
     historia_view,
     lista_osoby_pojazdy_view,
     dane_pojazd_view,
+    szczegoly_interwencji_api,
+    szczegoly_osoby_api,
+    szczegoly_pojazdu_api,
 )
 
 
@@ -55,7 +60,7 @@ urlpatterns = [
     path('notatka_html/', notatka_view, name='notatka_html'),
 
 
-    path('historia_html/', historia_view, name='historia_html'),
+    path("historia_html/", historia_interwencji, name="historia_html"),
     path('lista_osoby_pojazdy_html/', lista_osoby_pojazdy_view, name='lista_osoby_pojazdy_html'),
     path('dane_pojazd_html/', dane_pojazd_view, name='dane_pojazd_html'),
 
@@ -63,6 +68,9 @@ urlpatterns = [
     path('', strona_glowna_view, name='home'),
     path('logout/', LogoutView.as_view(next_page='/logowanie/'), name='logout'),
 
+ path('historia/', historia_interwencji, name='historia'),
+    path('api/interwencja/<str:interwencja_id>/', szczegoly_interwencji_api, name='szczegoly_interwencji_api'),
+    path("api/interwencja/<str:interwencja_id>/", szczegoly_interwencji_api),
+    path("api/osoba/<str:pesel>/", szczegoly_osoby_api),
+    path("api/pojazd/<str:rejestracja>/", szczegoly_pojazdu_api),
 ]
-
-

@@ -70,3 +70,18 @@ if response.status_code == 200:
     print("Notatka została zapisana.")
 else:
     print(f"Błąd przy zapisie notatki ({response.status_code}): {response.text}")
+
+#Zapis historii
+from firebase_admin import firestore
+from datetime import datetime
+
+def zapisz_interwencje(patrol_id, uczestnicy, osoby_spisane):
+    db = firestore.client()
+    czas_interwencji = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    db.collection("Interwencje").add({
+        "czas": czas_interwencji,
+        "patrol_id": patrol_id,
+        "uczestnicy": uczestnicy,
+        "osoby_spisane": osoby_spisane
+    })

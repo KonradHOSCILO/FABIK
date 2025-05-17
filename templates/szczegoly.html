@@ -1,0 +1,21 @@
+<h2>Szczegóły interwencji</h2>
+
+<p><strong>ID notatki:</strong> {{ interwencja.id_notatki }}</p>
+<p><strong>Status:</strong> {{ interwencja.status }}</p>
+<p><strong>Patrol:</strong> {{ interwencja.patrol_wysylajacy }}</p>
+
+<p><strong>Osoby biorące udział:</strong></p>
+<ul>
+  {% for pesel in interwencja.pesele_osob_bioracych_udzial_w_interwencji %}
+    <li>{{ pesel }}</li>
+  {% endfor %}
+</ul>
+
+<p><strong>Pojazdy biorące udział:</strong></p>
+<ul>
+  {% for pojazd in interwencja.pojazdy_biorace_udzial_w_interwencji %}
+    <li>{{ pojazd }}</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'historia' %}">← Wróć do historii</a>
