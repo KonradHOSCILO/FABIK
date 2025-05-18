@@ -70,7 +70,7 @@ urlpatterns = [
     path('', strona_glowna_view, name='home'),
     path('dashboard/', dashboard_view, name='dashboard'),           # <-- NOWA ŚCIEŻKA
     path('logout/', LogoutView.as_view(next_page='/logowanie/'), name='logout'),
- path('historia/', historia_interwencji, name='historia'),
+    path('historia/', historia_interwencji, name='historia'),
     path('api/interwencja/<str:interwencja_id>/', szczegoly_interwencji_api, name='szczegoly_interwencji_api'),
     path("api/interwencja/<str:interwencja_id>/", szczegoly_interwencji_api),
     path("api/osoba/<str:pesel>/", szczegoly_osoby_api),

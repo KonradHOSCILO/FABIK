@@ -374,12 +374,23 @@ def historia_view(request):
 def strona_glowna_view(request):
     patrol_status = None
     username = ""
+    interwencje_count = 0
+
     if request.user.is_authenticated:
         username = request.user.username
         patrol_status = fetch_patrol_status_by_username(username)
+
+        if patrol_status:
+            db = firestore.client()
+            all_docs = db.collection("interwencje").stream()
+
+            # Liczymy tylko te, których ID kończy się na _{username}
+            interwencje_count = sum(1 for doc in all_docs if doc.id.startswith(datetime.today().strftime("%Y-%m-%d")) and doc.id.endswith(f"_{username}"))
+
     return render(request, 'strona_glowna.html', {
         'patrol_status': patrol_status,
         'username': username,
+        'interwencje_count': interwencje_count,
     })
 
 def logowanie_view(request):
@@ -509,3 +520,4 @@ def szczegoly_pojazdu_api(request, rejestracja):
     if doc.exists:
         return JsonResponse(doc.to_dict())
     return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
+
