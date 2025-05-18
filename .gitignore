@@ -8,7 +8,6 @@ env/
 venv/
 ENV/
 .venv/
-*.sqlite3
 *.db
 *.log
 .idea/
@@ -19,8 +18,4 @@ ENV/
 Thumbs.db
 *.bak
 *.tmp
-db.sqlite3
-<<<<<<< HEAD
-db.sqlite3
-=======
->>>>>>> Logowanie
+
