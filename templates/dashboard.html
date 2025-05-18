@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Dyżurnego</title>
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background: #fdfdfd;
+    }
+    .status-badge {
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.3em 0.6em;
+      border-radius: 0.25rem;
+      color: #fff;
+      user-select: none;
+    }
+    .status-wolny { background-color: #198754; }      /* zielony */
+    .status-w_drodze { background-color: #0d6efd; }  /* niebieski */
+    .status-awaria { background-color: #dc3545; }     /* czerwony */
+    .status-poza_pojazdem { background-color: #6c757d; } /* szary */
+    .status-na_interwencji { background-color: #fd7e14; } /* pomarańcz */
+    /* Dodaj marginesy między komunikatami */
+    #receivedMessages .alert {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Panel Kontrolny Dyżurnego</a>
+        <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-secondary w-100">Wyloguj się</button>
+      </form>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="row">
+      <!-- Lewa kolumna: Lista patroli -->
+      <section class="col-md-6 mb-4">
+        <h2>Lista patroli i ich statusy</h2>
+        <div id="patrol-list" class="list-group">
+          <!-- Dynamicznie wypełniane -->
+        </div>
+        <div id="message" class="mt-3"></div>
+      </section>
+
+      <!-- Prawa kolumna: Komunikaty -->
+      <section class="col-md-6">
+        <h2>Komunikaty</h2>
+
+        <!-- Otrzymane -->
+        <div class="mb-4">
+
+            <label for="patrolSelect" class="form-label">Wybierz patrol:</label>
+            <select id="patrolSelect" class="form-select" required></select>
+
+          <h5></h5>
+            <div id="receivedMessages" class="border rounded p-3 bg-white mt-4" style="height: 300px; overflow-y: auto;">
+          <div class="text-muted">Brak komunikatów</div>
+        </div>
+
+
+
+        </div>
+
+        <!-- Wyślij -->
+        <div>
+
+          <form id="sendMessageForm" class="d-flex flex-column gap-2">
+
+              <!-- Dynamicznie wypełniane -->
+            </select>
+
+            <label for="messageText" class="form-label">Treść wiadomości:</label>
+            <textarea id="messageText" class="form-control" rows="2" required></textarea>
+
+            <button type="submit" class="btn btn-primary mt-2 align-self-start">Wyślij</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Bootstrap i Popper.js JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+const form = document.getElementById("sendMessageForm");
+const patrolSelect = document.getElementById("patrolSelect");
+const textarea = document.getElementById("messageText");
+const messagesDiv = document.getElementById("receivedMessages");
+const messageDiv = document.getElementById("message");
+const patrolListDiv = document.getElementById('patrol-list');
+
+const currentUsername = "{{ username|escapejs }}";
+const isDyzurny = true;
+const patroly = Array.from({ length: 10 }, (_, i) => (601 + i).toString());
+
+const statusy = {
+  "wolny": "Wolny",
+  "w_drodze": "W drodze",
+  "awaria": "Awaria",
+  "poza_pojazdem": "Poza pojazdem",
+  "na_interwencji": "Na interwencji"
+};
+
+const statusClasses = {
+  "wolny": "status-wolny",
+  "w_drodze": "status-w_drodze",
+  "awaria": "status-awaria",
+  "poza_pojazdem": "status-poza_pojazdem",
+  "na_interwencji": "status-na_interwencji"
+};
+
+// CSRF
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// ====== WIADOMOŚCI ======
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nadawca = currentUsername;
+  const odbiorca = patrolSelect.value;
+  const tresc = textarea.value.trim();
+
+  if (!odbiorca || !tresc) {
+    alert("Wybierz patrol i wpisz wiadomość");
+    return;
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  try {
+    const res = await fetch("/api/send_message/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify({ odbiorca, tresc })
+    });
+
+    const data = await res.json();
+
+    if (data.status === "ok") {
+      textarea.value = "";
+      loadMessages(odbiorca);
+    } else {
+      alert("Błąd: " + (data.error || "Nieznany błąd"));
+    }
+  } catch (err) {
+    alert("Błąd sieci lub serwera: " + err.message);
+  }
+});
+
+async function loadMessages(patrolId) {
+  if (!patrolId) {
+    messagesDiv.innerHTML = "<div class='text-muted'>Wybierz patrol aby zobaczyć komunikaty</div>";
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/get_messages/all/`);
+    if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
+
+    const allMessages = await res.json();
+
+    let filteredMessages = [];
+
+    if (patrolId === "all") {
+      filteredMessages = allMessages;
+    } else {
+      filteredMessages = allMessages.filter(msg =>
+        // Wiadomości między dyżurnym a patrolem (w obie strony)
+        (msg.nadawca === patrolId || msg.odbiorca === patrolId) ||
+        (msg.nadawca === "dyzurny" && msg.odbiorca === patrolId) ||
+        (msg.nadawca === patrolId && msg.odbiorca === "dyzurny")
+      );
+    }
+
+    filteredMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    messagesDiv.innerHTML = filteredMessages.length
+      ? ""
+      : "<div class='text-muted'>Brak komunikatów</div>";
+
+    for (const msg of filteredMessages) {
+    const date = new Date(msg.timestamp);
+    const timeStr = date.toLocaleTimeString('pl-PL', { hour12: false });
+
+    const nadawcaRaw = msg.nadawca?.toLowerCase();
+    const odbiorcaRaw = msg.odbiorca?.toLowerCase();
+
+    const nadawca = nadawcaRaw === "dyzurny" ? "Dyżurny" : msg.nadawca;
+    const odbiorcaDisplay = ["all", "wszyscy"].includes(odbiorcaRaw)
+        ? "Wszyscy"
+        : (odbiorcaRaw === "dyzurny" ? "Dyżurny" : msg.odbiorca);
+
+    const fullPrefix = `${timeStr}, ${nadawca} → ${odbiorcaDisplay}:`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "p-2 mb-2 rounded text-break";
+
+
+    // Styl w zależności od nadawcy
+    if (nadawcaRaw === "dyzurny") {
+        wrapper.classList.add("bg-info-subtle", "text-dark");
+    } else {
+        wrapper.classList.add("bg-light", "text-dark");
+    }
+
+    const header = document.createElement("div");
+    header.className = "fw-semibold mb-1";
+    header.textContent = fullPrefix;
+
+    const messageText = document.createElement("span");
+    messageText.textContent = msg.tresc;
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(messageText);
+    messagesDiv.insertBefore(wrapper, messagesDiv.firstChild);
+
+}
+
+  } catch (error) {
+    messagesDiv.innerHTML = `<div class='text-danger'>Błąd ładowania komunikatów: ${error.message}</div>`;
+  }
+}
+
+
+// ====== STATUSY PATROLI ======
+async function fetchStatus(patrolNumber) {
+  try {
+    const res = await fetch(`/patrol/status/?patrol_number=${encodeURIComponent(patrolNumber)}`, {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    return data.status === 'ok' ? data.display : "Brak statusu";
+  } catch {
+    return "Błąd połączenia";
+  }
+}
+
+async function updateStatus(patrolNumber, newStatusKey) {
+  try {
+    const res = await fetch('/patrol/status/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify({ patrol_number: patrolNumber, new_status: newStatusKey })
+    });
+
+    const data = await res.json();
+    return data.status === 'ok'
+      ? { status: "ok", display: data.display }
+      : { error: data.error || "Błąd aktualizacji" };
+  } catch {
+    return { error: "Błąd połączenia z serwerem" };
+  }
+}
+
+function createPatrolListItem(patrolNumber, statusText) {
+  const li = document.createElement('div');
+  li.className = 'list-group-item d-flex justify-content-between align-items-center flex-wrap';
+
+  const title = document.createElement('div');
+  title.innerHTML = `<strong>Patrol ${patrolNumber}</strong>`;
+
+  const statusBadge = document.createElement('span');
+  statusBadge.textContent = statusText;
+  const key = Object.entries(statusy).find(([, v]) => v === statusText)?.[0];
+  statusBadge.className = `status-badge ${statusClasses[key] || 'bg-secondary'}`;
+
+  if (isDyzurny) {
+    const select = document.createElement('select');
+    select.className = 'form-select form-select-sm me-2';
+    select.style.width = '180px';
+
+    for (const [k, v] of Object.entries(statusy)) {
+      const option = document.createElement('option');
+      option.value = k;
+      option.text = v;
+      if (v === statusText) option.selected = true;
+      select.appendChild(option);
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm btn-primary';
+    btn.textContent = 'Zmień status';
+
+    btn.onclick = async () => {
+      btn.disabled = true;
+      const result = await updateStatus(patrolNumber, select.value);
+      btn.disabled = false;
+
+      if (result.status === "ok") {
+        statusBadge.textContent = result.display;
+        for (const cls of Object.values(statusClasses)) {
+          statusBadge.classList.remove(cls);
+        }
+        statusBadge.classList.add(statusClasses[select.value]);
+        showMessage(`Status patrolu ${patrolNumber} zmieniono na "${result.display}"`, 'success');
+      } else {
+        showMessage(result.error, 'danger');
+      }
+    };
+
+    const controls = document.createElement('div');
+    controls.className = 'd-flex align-items-center';
+    controls.appendChild(select);
+    controls.appendChild(btn);
+
+    li.appendChild(title);
+    li.appendChild(statusBadge);
+    li.appendChild(controls);
+  } else {
+    li.appendChild(title);
+    li.appendChild(statusBadge);
+  }
+
+  return li;
+}
+
+function showMessage(text, type = 'info') {
+  messageDiv.innerHTML = `<div class="alert alert-${type}" role="alert">${text}</div>`;
+  setTimeout(() => messageDiv.innerHTML = '', 4000);
+}
+
+async function loadPatrolStatuses() {
+  patrolListDiv.innerHTML = '';
+  patrolSelect.innerHTML = '';
+  patrolSelect.appendChild(Object.assign(document.createElement('option'), {
+    value: 'all',
+    textContent: 'Wszystkie patrole'
+  }));
+
+  for (const patrol of patroly) {
+    const status = await fetchStatus(patrol);
+    const item = createPatrolListItem(patrol, status);
+    patrolListDiv.appendChild(item);
+
+    const option = document.createElement('option');
+    option.value = patrol;
+    option.textContent = patrol;
+    patrolSelect.appendChild(option);
+  }
+}
+
+// ====== INICJALIZACJA ======
+patrolSelect.addEventListener("change", () => {
+  const selected = patrolSelect.value;
+  messagesDiv.innerHTML = '<div class="text-muted">Ładowanie komunikatów...</div>';
+  loadMessages(selected);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadPatrolStatuses();
+  loadMessages(patrolSelect.value || "all");
+setInterval(() => loadMessages(patrolSelect.value || "all"), 5000);
+
+setInterval(async () => {
+for (const patrol of patroly) {
+const status = await fetchStatus(patrol);
+const item = Array.from(patrolListDiv.children).find(el =>
+el.firstChild?.textContent.includes(patrol)
+);
+if (item) {
+const badge = item.querySelector('.status-badge');
+if (badge && badge.textContent !== status) {
+for (const cls of Object.values(statusClasses)) {
+badge.classList.remove(cls);
+}
+const key = Object.entries(statusy).find(([, v]) => v === status)?.[0];
+badge.textContent = status;
+badge.classList.add(statusClasses[key] || 'bg-secondary');
+}
+}
+}
+}, 2000);
+});
+</script>
+
+
+
+</body>
+</html>
