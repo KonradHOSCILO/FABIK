@@ -4,4 +4,5 @@ google-auth
 google-auth-oauthlib
 python-dotenv
 firebase-admin
-whirenoise
+whitenoise
+dj-database-url

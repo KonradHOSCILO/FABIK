@@ -13,4 +13,13 @@ class UserProfile(models.Model):
     ]
     patrol_status = models.CharField(max_length=20, choices=PATROL_STATUS_CHOICES, default='wolny')
 
+class Message(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE, null=True, blank=True)  # null = do wszystkich
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
 # Upewnij się, że profil tworzy się automatycznie (możesz użyć sygnałów post_save)

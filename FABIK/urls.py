@@ -4,6 +4,8 @@ from django.urls import path
 from Application.views import historia_interwencji, szczegoly_interwencji_api
 from Application import views
 from Application.views import patrol_login_view
+
+
 from Application.views import (
     wyszukaj_osobe_view,
     wyszukaj_pojazd_view,
@@ -26,26 +28,29 @@ from Application.views import (
     notatka_view,
     zakoncz_interwencje_view,
 
+    send_message_view,
+    get_messages_view,
     historia_view,
     lista_osoby_pojazdy_view,
     dane_pojazd_view,
     szczegoly_interwencji_api,
     szczegoly_osoby_api,
     szczegoly_pojazdu_api,
+    dashboard_view,  # <-- DODANO WIDOK dashboard_view
 )
 
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
 urlpatterns = [
+    path("api/send_message/", send_message_view, name="send_message"),
+    path("api/get_messages/<str:patrol_id>/", get_messages_view, name="get_messages"),
     path('patrol/status/', set_patrol_status, name='set_patrol_status'),
     path('admin/', admin.site.urls),
     path('osoba/', wyszukaj_osobe_view, name='wyszukaj_osobe'),
     path('pojazd/', wyszukaj_pojazd_view, name='wyszukaj_pojazd'),
     path('zakoncz_notatke/', zakoncz_interwencje_view, name='zakoncz_notatke'),
-
     path('logowanie/', patrol_login_view, name='patrol_login'),
     path('strona_glowna_html/', strona_glowna_view, name='strona_glowna_html'),
-
     path('rozpocznij_interwencje/', rozpocznij_interwencje_view, name='rozpocznij_interwencje'),
     path('pobierz_dane_interwencji/', pobierz_dane_interwencji_view, name='pobierz_dane_interwencji'),
     path('szukaj_wybor_html/', szukaj_wybor_view, name='szukaj_wybor_html'),
@@ -58,16 +63,13 @@ urlpatterns = [
     path('dodaj_pojazd_interwencja/', dodaj_pojazd_interwencja_view, name='dodaj_pojazd_interwencja'),
     path('dodaj_osobe_interwencja/', dodaj_osobe_interwencja_view, name='dodaj_osobe_interwencja'),
     path('notatka_html/', notatka_view, name='notatka_html'),
-
-
     path("historia_html/", historia_interwencji, name="historia_html"),
     path('lista_osoby_pojazdy_html/', lista_osoby_pojazdy_view, name='lista_osoby_pojazdy_html'),
     path('dane_pojazd_html/', dane_pojazd_view, name='dane_pojazd_html'),
-
     # Dodaj TĘ linię, aby obsłużyć główny adres (127.0.0.1:8000/)
     path('', strona_glowna_view, name='home'),
+    path('dashboard/', dashboard_view, name='dashboard'),           # <-- NOWA ŚCIEŻKA
     path('logout/', LogoutView.as_view(next_page='/logowanie/'), name='logout'),
-
  path('historia/', historia_interwencji, name='historia'),
     path('api/interwencja/<str:interwencja_id>/', szczegoly_interwencji_api, name='szczegoly_interwencji_api'),
     path("api/interwencja/<str:interwencja_id>/", szczegoly_interwencji_api),
