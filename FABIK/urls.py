@@ -6,6 +6,7 @@ from Application import views
 from Application.views import patrol_login_view
 
 
+
 from Application.views import (
     wyszukaj_osobe_view,
     wyszukaj_pojazd_view,
@@ -37,11 +38,14 @@ from Application.views import (
     szczegoly_osoby_api,
     szczegoly_pojazdu_api,
     dashboard_view,  # <-- DODANO WIDOK dashboard_view
+    historia_dyzurny_view
 )
 
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
 urlpatterns = [
+
+    path('historia_dyzurny/', historia_dyzurny_view, name='historia_dyzurny'),
     path("api/send_message/", send_message_view, name="send_message"),
     path("api/get_messages/<str:patrol_id>/", get_messages_view, name="get_messages"),
     path('patrol/status/', set_patrol_status, name='set_patrol_status'),

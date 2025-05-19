@@ -16,6 +16,7 @@ from django.http import HttpResponse
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from Application.firestore_fetch_data import fetch_patrol_status_by_username
+from django.utils.timezone import make_aware, make_naive, is_aware, is_naive
 import requests
 import datetime
 
@@ -34,6 +35,13 @@ from google.cloud.firestore_v1 import SERVER_TIMESTAMP  # Poprawny import
 from django.contrib.auth.decorators import login_required
 from .models import Message
 from .getmessages import pobierz_wszystkie_wiadomosci
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from django.utils.timezone import make_aware, is_aware, get_default_timezone
+import json
+
+
 
 
 
@@ -126,10 +134,94 @@ def patrol_login_view(request):
 
 
 # --- Dashboard dla dyżurnego i admina ---
+@login_required
 def dashboard_view(request):
     if not request.user.is_authenticated or request.user.username.lower() not in ['dyzurny', 'admin']:
         return redirect('strona_glowna_html')
     return render(request, 'dashboard.html')
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from datetime import datetime
+import json
+
+from datetime import datetime
+import json
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def historia_dyzurny_view(request):
+    if request.user.username.lower() != 'dyzurny':
+        return redirect('strona_glowna_html')
+
+    wybrany_patrol = request.GET.get('patrol', '').strip()
+    interwencje_ref = db.collection('interwencje')
+    dokumenty = interwencje_ref.stream()
+
+    historia = []
+    for doc in dokumenty:
+        data = doc.to_dict()
+        data['id_notatki'] = doc.id  # Ustawiamy klucz zgodny z JS (id_notatki, bo taki jest w JS)
+
+        patrol = str(data.get('patrol_wysylajacy', '')).strip()
+        if wybrany_patrol and patrol != wybrany_patrol:
+            continue
+
+        # Data wysłania
+        data_wyslania_raw = data.get('data_wyslania') or doc.create_time
+        if isinstance(data_wyslania_raw, datetime):
+            dt = data_wyslania_raw
+        elif isinstance(data_wyslania_raw, str):
+            try:
+                dt = datetime.strptime(data_wyslania_raw, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                try:
+                    dt = datetime.fromisoformat(data_wyslania_raw)
+                except ValueError:
+                    dt = None
+        else:
+            dt = None
+
+        if dt:
+            godzina = dt.strftime("%H:%M")
+            data_str = dt.strftime("%Y-%m-%d")
+            sort_key = dt
+            wyswietlana_data = dt.strftime("%Y-%m-%d %H:%M")
+        else:
+            godzina = "??:??"
+            data_str = "brak_daty"
+            sort_key = datetime.min
+            wyswietlana_data = "brak"
+
+        nazwa = f"{patrol} {godzina} {data_str} {doc.id}"
+        data['nazwa_interwencji'] = nazwa
+        data['data_wyslania'] = wyswietlana_data
+        data['_sort_key'] = sort_key
+
+        historia.append(data)
+
+    historia.sort(key=lambda x: x['_sort_key'], reverse=True)
+    for item in historia:
+        item.pop('_sort_key', None)
+
+    patrole = [str(num) for num in range(601, 611)]
+    historia_json = json.dumps(historia)
+
+    return render(request, 'historia_dyzurny.html', {
+        'historia': historia,  # <--- dodajemy pełną listę interwencji
+        'historia_json': historia_json,
+        'patrole': patrole,
+        'user_id': request.user.username.lower(),
+        'wybrany_patrol': wybrany_patrol,
+    })
+
+
+
+
 
 
 @csrf_exempt
@@ -520,4 +612,3 @@ def szczegoly_pojazdu_api(request, rejestracja):
     if doc.exists:
         return JsonResponse(doc.to_dict())
     return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
-
