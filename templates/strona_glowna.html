@@ -12,53 +12,47 @@
 
         <!-- Kafelki -->
         <div class="card shadow p-4">
+    <div class="row g-3 align-items-stretch"> <!-- dodano align-items-stretch -->
 
-            <div class="row g-3">
-
-                <!-- Status patrolu przeniesiony tutaj zamiast napisu "W trakcie Dokumentacji" -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center flex-wrap">
-                                <div>
-                                    <strong>Status patrolu {{ user.username }}:</strong>
-                                    <span id="patrol-status"
-                                          data-patrol-number="{{ user.username|lower }}">Ładowanie...</span>
-                                </div>
-                                <div class="dropdown ms-3">
-                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                            id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Zmień status
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0);"
-                                               onclick="setStatus('wolny')">Wolny</a></li>
-                                        <li><a class="dropdown-item" href="javascript:void(0);"
-                                               onclick="setStatus('w_drodze')">W drodze</a></li>
-                                        <li><a class="dropdown-item" href="javascript:void(0);"
-                                               onclick="setStatus('awaria')">Awaria</a></li>
-                                        <li><a class="dropdown-item" href="javascript:void(0);"
-                                               onclick="setStatus('poza_pojazdem')">Poza pojazdem</a></li>
-                                    </ul>
-                                </div>
-                            </div>
+        <!-- Pierwszy kafelek -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100"> <!-- dodano h-100 -->
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center flex-wrap">
+                        <div>
+                            <strong>Status patrolu {{ user.username }}:</strong>
+                            <span id="patrol-status" data-patrol-number="{{ user.username|lower }}">Ładowanie...</span>
+                        </div>
+                        <div class="dropdown ms-3">
+                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
+                                    id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Zmień status
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('wolny')">Wolny</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('w_drodze')">W drodze</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('awaria')">Awaria</a></li>
+                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('poza_pojazdem')">Poza pojazdem</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-
-                <!-- Pozostawiamy drugi kafelek bez zmian -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <p class="text-secondary mb-1">
-                                Liczba przeprowadzonych interwencji dzisiejszego dnia
-                            </p>
-                            <h5 class="fw-bold">{{ interwencje_count }}</h5>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+        </div>
+
+        <!-- Drugi kafelek -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100"> <!-- dodano h-100 -->
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <p class="text-secondary mb-1">Liczba przeprowadzonych interwencji dzisiejszego dnia</p>
+                    <h5 class="fw-bold">{{ interwencje_count }}</h5>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 
             <!-- Przycisk -->
             <div class="mt-3">
@@ -88,15 +82,8 @@
     </form>
 </div>
 
-
-
                 <div class="col-md-6">
                     <a href="/historia_html" class="btn btn-primary w-100" role="button">Sprawdź historię</a>
-                </div>
-
-                <div class="col-md-6">
-                    <a href="/lista_osoby_pojazdy_html" class="btn btn-primary w-100" role="button">Wyszukaj osobę lub
-                        pojazd</a>
                 </div>
 
             </div>

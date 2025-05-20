@@ -32,7 +32,6 @@ from Application.views import (
     send_message_view,
     get_messages_view,
     historia_view,
-    lista_osoby_pojazdy_view,
     dane_pojazd_view,
     szczegoly_interwencji_api,
     szczegoly_osoby_api,
@@ -68,7 +67,6 @@ urlpatterns = [
     path('dodaj_osobe_interwencja/', dodaj_osobe_interwencja_view, name='dodaj_osobe_interwencja'),
     path('notatka_html/', notatka_view, name='notatka_html'),
     path("historia_html/", historia_interwencji, name="historia_html"),
-    path('lista_osoby_pojazdy_html/', lista_osoby_pojazdy_view, name='lista_osoby_pojazdy_html'),
     path('dane_pojazd_html/', dane_pojazd_view, name='dane_pojazd_html'),
     # Dodaj TĘ linię, aby obsłużyć główny adres (127.0.0.1:8000/)
     path('', strona_glowna_view, name='home'),

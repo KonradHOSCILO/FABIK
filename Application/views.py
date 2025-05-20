@@ -512,9 +512,6 @@ def szukaj_pojazd_vin_view(request):
 def notatka_view(request):
     return render(request, 'notatka.html')
 
-def lista_osoby_pojazdy_view(request):
-    return render(request, 'lista_osoby_pojazdy.html')
-
 def dane_pojazd_view(request):
     return render(request, 'dane_pojazd.html')
 
@@ -575,7 +572,7 @@ def historia_interwencji(request):
         "wybrany_patrol": wybrany_patrol
     })
 
-    # Przykładowa lista dostępnych patroli — możesz to dynamicznie generować z bazy
+
     lista_patroli = ["601", "602", "603", "admin", "dyzurny"]
 
     return render(request, "historia_html.html", {
