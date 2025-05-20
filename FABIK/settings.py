@@ -34,7 +34,6 @@ if not SECRET_KEY:
     raise ValueError("SECRET_KEY is not set in the environment variables.")
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'fabik.pythonanywhere.com']

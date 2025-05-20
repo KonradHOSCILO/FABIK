@@ -13,8 +13,6 @@ from Application.views import (
     patrol_login_view,
     strona_glowna_view,
     set_patrol_status,
-
-
     rozpocznij_interwencje_view,
     pobierz_dane_interwencji_view,
     szukaj_wybor_view,
@@ -28,7 +26,6 @@ from Application.views import (
     dodaj_osobe_interwencja_view,
     notatka_view,
     zakoncz_interwencje_view,
-
     send_message_view,
     get_messages_view,
     historia_view,

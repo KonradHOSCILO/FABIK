@@ -147,7 +147,7 @@ from django.shortcuts import render, redirect
 from datetime import datetime
 import json
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -165,13 +165,12 @@ def historia_dyzurny_view(request):
     historia = []
     for doc in dokumenty:
         data = doc.to_dict()
-        data['id_notatki'] = doc.id  # Ustawiamy klucz zgodny z JS (id_notatki, bo taki jest w JS)
+        data['id_notatki'] = doc.id
 
         patrol = str(data.get('patrol_wysylajacy', '')).strip()
         if wybrany_patrol and patrol != wybrany_patrol:
             continue
 
-        # Data wysłania
         data_wyslania_raw = data.get('data_wyslania') or doc.create_time
         if isinstance(data_wyslania_raw, datetime):
             dt = data_wyslania_raw
@@ -187,6 +186,7 @@ def historia_dyzurny_view(request):
             dt = None
 
         if dt:
+            dt += timedelta(hours=2)  # 🔧 Korekta czasu do UTC+2
             godzina = dt.strftime("%H:%M")
             data_str = dt.strftime("%Y-%m-%d")
             sort_key = dt
@@ -212,7 +212,7 @@ def historia_dyzurny_view(request):
     historia_json = json.dumps(historia)
 
     return render(request, 'historia_dyzurny.html', {
-        'historia': historia,  # <--- dodajemy pełną listę interwencji
+        'historia': historia,
         'historia_json': historia_json,
         'patrole': patrole,
         'user_id': request.user.username.lower(),

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Historia interwencji</a>
+        </div>
+    </nav>
+
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Historia Dyżurnego</title>
@@ -16,7 +22,7 @@
         <a href="/dashboard_html" class="btn bg-white shadow-sm border rounded-3 px-3">
             <i class="bi bi-arrow-left"></i>
         </a>
-        <h4 class="text-center flex-grow-1 fw-bold">Historia Dyżurnego</h4>
+
     </div>
 
     <!-- Dropdown z patrolami -->
@@ -24,7 +30,7 @@
         <form method="get" class="mb-4">
             <label for="patrol" class="form-label">Filtruj po patrolu:</label>
             <select name="patrol" id="patrol" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Wszystkie patrole --</option>
+                <option value="">Wszystkie patrole</option>
                 {% for patrol in patrole %}
                     <option value="{{ patrol }}"
                             {% if wybrany_patrol == patrol %}selected{% endif %}>{{ patrol }}</option>
