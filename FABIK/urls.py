@@ -1,11 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
-from Application.views import historia_interwencji, szczegoly_interwencji_api
-from Application import views
-from Application.views import patrol_login_view
-
-
+from Application.views import historia_interwencji
 
 from Application.views import (
     wyszukaj_osobe_view,
@@ -28,15 +24,14 @@ from Application.views import (
     zakoncz_interwencje_view,
     send_message_view,
     get_messages_view,
-    historia_view,
+
     dane_pojazd_view,
     szczegoly_interwencji_api,
     szczegoly_osoby_api,
     szczegoly_pojazdu_api,
-    dashboard_view,  # <-- DODANO WIDOK dashboard_view
+    dashboard_view,
     historia_dyzurny_view
 )
-
 
 # Lista URL, która mapuje ścieżki URL do odpowiednich widoków
 urlpatterns = [
@@ -65,13 +60,10 @@ urlpatterns = [
     path('notatka_html/', notatka_view, name='notatka_html'),
     path("historia_html/", historia_interwencji, name="historia_html"),
     path('dane_pojazd_html/', dane_pojazd_view, name='dane_pojazd_html'),
-    # Dodaj TĘ linię, aby obsłużyć główny adres (127.0.0.1:8000/)
     path('', strona_glowna_view, name='home'),
-    path('dashboard/', dashboard_view, name='dashboard'),           # <-- NOWA ŚCIEŻKA
+    path('dashboard/', dashboard_view, name='dashboard'),
     path('logout/', LogoutView.as_view(next_page='/logowanie/'), name='logout'),
-    path('historia/', historia_interwencji, name='historia'),
     path('api/interwencja/<str:interwencja_id>/', szczegoly_interwencji_api, name='szczegoly_interwencji_api'),
-    path("api/interwencja/<str:interwencja_id>/", szczegoly_interwencji_api),
     path("api/osoba/<str:pesel>/", szczegoly_osoby_api),
     path("api/pojazd/<str:rejestracja>/", szczegoly_pojazdu_api),
 ]

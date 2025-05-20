@@ -1,14 +1,7 @@
 import os
-import random
-import string
-from datetime import datetime
-import requests
 from dotenv import load_dotenv
-
 import firebase_admin
 from firebase_admin import credentials, firestore
-from google.oauth2 import service_account
-from google.auth.transport.requests import Request
 
 load_dotenv()
 _firestore_db = None
@@ -24,8 +17,8 @@ def pobierz_wiadomosci_dla_patrolu(patrol_id):
             firebase_admin.initialize_app(cred)
         _firestore_db = firestore.client()
 
-    # Pobieramy dokumenty z kolekcji "wiadomosci" gdzie odbiorca == patrol_id
-    docs = _firestore_db.collection('wiadomosci').where('odbiorca', '==', patrol_id).stream()
+    # Pobieramy dokumenty z kolekcji wiadomosci gdzie odbiorca == patrol_id lub == "all"
+    docs = _firestore_db.collection('wiadomosci').where('odbiorca', 'in', [patrol_id, 'all']).stream()
 
     matching = []
     for doc in docs:
@@ -40,6 +33,7 @@ def pobierz_wiadomosci_dla_patrolu(patrol_id):
     # Sortowanie malejąco po timestamp
     matching.sort(key=lambda x: x["timestamp"], reverse=True)
     return matching
+
 
 def pobierz_wszystkie_wiadomosci():
     global _firestore_db

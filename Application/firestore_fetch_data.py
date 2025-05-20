@@ -10,10 +10,10 @@ from firebase_admin import credentials, firestore
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
-
 load_dotenv()
 _firestore_db = None
 db = firestore.Client()
+
 
 def get_firestore_db():
     """
@@ -32,6 +32,7 @@ def get_firestore_db():
         _firestore_db = firestore.client()
     return _firestore_db
 
+
 def get_credentials():
     """
     Pobiera poświadczenia konta serwisowego Google do bezpośredniej autoryzacji API REST.
@@ -42,11 +43,12 @@ def get_credentials():
         cred_path,
         scopes=['https://www.googleapis.com/auth/datastore']
     )
-    # Odświeżenie tokena (konieczne do autoryzacji API)
+    # Odświeżenie tokena
     creds.refresh(Request())
     project_id = creds.project_id
     headers = {"Authorization": f"Bearer {creds.token}"}
     return project_id, headers
+
 
 def format_firestore_fields(fields):
     """
@@ -66,10 +68,11 @@ def format_firestore_fields(fields):
                 item.get('stringValue', '–') for item in value['arrayValue'].get('values', [])
             ]
         elif 'booleanValue' in value:
-            # Na potrzeby czytelności zwracamy "Tak"/"Nie"
+            # Na potrzeby czytelności zwracamy Tak/Nie
             formatted_data[key] = 'Tak' if value['booleanValue'] else 'Nie'
-        # Opcjonalny: obsłuż inne przypadki (mapValue, timestamp itp.)
+        # Opcjonalny obsłuż inne przypadki
     return formatted_data
+
 
 def generate_random_id(length=7):
     """
@@ -77,6 +80,7 @@ def generate_random_id(length=7):
     Używa liter łacińskich i cyfr.
     """
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
 
 def fetch_patrol_status_by_username(username):
     """
@@ -90,6 +94,7 @@ def fetch_patrol_status_by_username(username):
     if doc.exists:
         return doc.to_dict().get("status", None)
     return None
+
 
 def create_interwencja_document(numer_patrolu):
     """
@@ -125,11 +130,13 @@ def create_interwencja_document(numer_patrolu):
     # Wysyłka żądania HTTP
     response = requests.post(url, headers=headers, json=payload)
     if response.status_code == 200:
-        # Sukces: zwróć wygenerowaną nazwę dokumentu
+        # Sukces - zwróć wygenerowaną nazwę dokumentu
         return document_name
     else:
         print(response.text)
         return None
+
+
 def pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id):
     if not interwencja_id:
         return {"error": "Brak ID interwencji"}
@@ -146,13 +153,16 @@ def pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id):
 
     pojazdy = []
     if "pojazdy_biorace_udzial_w_interwencji" in fields:
-        pojazdy = [el["stringValue"] for el in fields["pojazdy_biorace_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
+        pojazdy = [el["stringValue"] for el in
+                   fields["pojazdy_biorace_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
 
     osoby = []
     if "pesele_osob_bioracych_udzial_w_interwencji" in fields:
-        osoby = [el["stringValue"] for el in fields["pesele_osob_bioracych_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
+        osoby = [el["stringValue"] for el in
+                 fields["pesele_osob_bioracych_udzial_w_interwencji"].get("arrayValue", {}).get("values", [])]
 
     return {"pojazdy": pojazdy, "osoby": osoby}
+
 
 def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_vin=None):
     pojazdy_ref = db.collection("pojazdy")
@@ -169,7 +179,7 @@ def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_
                 pelna_nazwa = doc_id
                 break
 
-    if not pelna_nazwa and numer_vin:
+    if numer_vin:
         numer_vin = numer_vin.strip().upper()
         for doc_ref in dokumenty:
             doc_id = doc_ref.id
@@ -191,6 +201,7 @@ def dodaj_pojazd_do_interwencji(interwencja_id, numer_rejestracyjny=None, numer_
         return True, None
     except Exception as e:
         return False, f"Błąd podczas aktualizacji interwencji: {str(e)}"
+
 
 def dodaj_osobe_do_interwencji(interwencja_id, pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     """
@@ -222,8 +233,6 @@ def dodaj_osobe_do_interwencji(interwencja_id, pesel=None, imie=None, nazwisko=N
         return False, f"Błąd podczas aktualizacji dokumentu: {e}"
 
 
-
-
 def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_urodzenia=None):
     """
     Wyszukuje osobę w kolekcji 'osoby'.
@@ -252,9 +261,9 @@ def fetch_person_by_pesel_or_data(pesel=None, imie=None, nazwisko=None, data_uro
             format_firestore_fields(doc.get("fields", {}))
             for doc in all_docs
             if (
-                doc.get("fields", {}).get("pierwsze_imie", {}).get("stringValue", "").lower() == imie.lower()
-                and doc.get("fields", {}).get("nazwisko", {}).get("stringValue", "").lower() == nazwisko.lower()
-                and doc.get("fields", {}).get("data_urodzenia", {}).get("stringValue", "") == data_urodzenia
+                    doc.get("fields", {}).get("pierwsze_imie", {}).get("stringValue", "").lower() == imie.lower()
+                    and doc.get("fields", {}).get("nazwisko", {}).get("stringValue", "").lower() == nazwisko.lower()
+                    and doc.get("fields", {}).get("data_urodzenia", {}).get("stringValue", "") == data_urodzenia
             )
         ]
         return matching
@@ -267,7 +276,6 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
     a jeśli nie znajdzie, to próbuje po polu 'vin' (jeśli długość 17) lub 'tablica_rejestracyjna'.
     Jeśli pierwszy nie zadziała, próbuje alternatywnie.
     """
-    import requests
 
     project_id, headers = get_credentials()
     identyfikator = identyfikator.strip().upper()
@@ -304,7 +312,7 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
                     return result["document"], field_name
         return None, None
 
-    # Próba VIN → tablica lub odwrotnie
+    # Próba VIN - tablica lub odwrotnie
     if len(identyfikator) == 17:
         document, field = run_query("vin")
         if document:
@@ -315,8 +323,6 @@ def fetch_vehicle_by_plate_or_vin(identyfikator):
         if document:
             return document, field
         return run_query("vin")
-
-    return None, "nie znaleziono"
 
 
 def zakoncz_interwencje(interwencja_id, notatka):

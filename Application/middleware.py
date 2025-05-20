@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import redirect
 
+
 class LoginRequiredMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -16,7 +17,7 @@ class LoginRequiredMiddleware:
             'dashboard/',
         ]
 
-        # Sprawdzenie, czy użytkownik jest zalogowany
+        # Sprawdzenie czy użytkownik jest zalogowany
         if not request.user.is_authenticated:
             if not any(path.startswith(prefix) for prefix in allowed_for_anonymous):
                 return redirect(settings.LOGIN_URL)
@@ -37,7 +38,7 @@ class LoginRequiredMiddleware:
                 'patrol/status/',
             ]
 
-            # Jeśli to pierwsze wejście po logowaniu (np. root lub logowanie), przekieruj na dashboard
+            # Jeśli to pierwsze wejście po logowaniu przekieruj na dashboard
             if path in ['', 'logowanie']:
                 return redirect('/dashboard/')
 

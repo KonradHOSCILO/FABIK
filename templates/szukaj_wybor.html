@@ -7,239 +7,241 @@
             <a class="navbar-brand" href="#">Interwencja</a>
         </div>
     </nav>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interwencja</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Interwencja</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
 </head>
 
 <body class="bg-light">
 
-  <div class="container mt-5">
+<div class="container mt-5">
 
     <div class="d-flex align-items-center mb-3">
-      <a href="/strona_glowna_html" class="btn bg-white shadow-sm border rounded-3 px-3">
-        <i class="bi bi-arrow-left"></i>
-      </a>
+        <a href="/strona_glowna_html" class="btn bg-white shadow-sm border rounded-3 px-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
 
     </div>
 
     <div class="card shadow p-4">
-      <h3 class="text-center mb-4">Wyszukaj osoby albo pojazdy i dodaj je do interwencji</h3>
+        <h3 class="text-center mb-4">Wyszukaj osoby albo pojazdy i dodaj je do interwencji</h3>
 
-      <div class="row justify-content-center g-4">
+        <div class="row justify-content-center g-4">
 
-        <!-- Panel 1 - Szukaj osoby -->
-        <div class="col-md-5">
-          <a href="/szukaj_osoba_sposob_html" class="btn btn-primary text-center shadow-sm border rounded-3 p-4 d-flex flex-column align-items-center">
-            <i class="bi bi-person-fill" style="font-size: 3rem;"></i>
-            <h4 class="mt-3 mb-0">Szukaj osoby</h4>
-          </a>
+
+            <div class="col-md-5">
+                <a href="/szukaj_osoba_sposob_html"
+                   class="btn btn-primary text-center shadow-sm border rounded-3 p-4 d-flex flex-column align-items-center">
+                    <i class="bi bi-person-fill" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3 mb-0">Szukaj osoby</h4>
+                </a>
+            </div>
+
+
+            <div class="col-md-5">
+                <a href="/szukaj_pojazd_sposob_html"
+                   class="btn btn-primary text-center shadow-sm border rounded-3 p-4 d-flex flex-column align-items-center">
+                    <i class="bi bi-car-front-fill" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3 mb-0">Szukaj pojazdu</h4>
+                </a>
+            </div>
+
         </div>
 
-        <!-- Panel 2 - Szukaj pojazdu -->
-        <div class="col-md-5">
-          <a href="/szukaj_pojazd_sposob_html" class="btn btn-primary text-center shadow-sm border rounded-3 p-4 d-flex flex-column align-items-center">
-            <i class="bi bi-car-front-fill" style="font-size: 3rem;"></i>
-            <h4 class="mt-3 mb-0">Szukaj pojazdu</h4>
-          </a>
+        <div id="dodanePojazdy" class="mt-4">
+            <h5 class="text-center">Dodane pojazdy:</h5>
+            <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
         </div>
 
-      </div>
+        <div id="dodaneOsoby" class="mt-4">
+            <h5 class="text-center">Dodane osoby:</h5>
+            <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
+        </div>
 
-      <div id="dodanePojazdy" class="mt-4">
-        <h5 class="text-center">Dodane pojazdy:</h5>
-        <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
-      </div>
-
-      <div id="dodaneOsoby" class="mt-4">
-        <h5 class="text-center">Dodane osoby:</h5>
-        <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
-      </div>
-
-      <div class="mt-4">
-        <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
-      </div>
+        <div class="mt-4">
+            <a href="/notatka_html" class="btn btn-secondary w-100">Przejdź do notatki</a>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- Modal -->
-  <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background-color: rgba(0, 0, 0, 0.5); z-index: 1000;" onclick="zamknijModal()"></div>
 
-  <div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+<div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
     background:white; padding:20px; border-radius:10px; z-index:1001; max-width:90%; min-width:300px;">
     <h5 id="modalTresc">Dane</h5>
-  </div>
+</div>
 
-  <script>
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-
-  const interwencjaId = getCookie("interwencja_id");
-
-  const pojazdKeys = {
-    "typ_pojazdu": "Typ pojazdu",
-    "samochód_ciężarowy": "Samochód ciężarowy",
-    "dopuszczalny_nacisk_osi": "Dopuszczalny nacisk osi",
-    "pesel_wlasciciela": "PESEL właściciela",
-    "czy_badanie_techniczne": "Czy badanie techniczne wykonane",
-    "nazwisko_wlasciciela": "Nazwisko właściciela",
-    "rocznik": "Rocznik",
-    "masa_wlasna": "Masa własna",
-    "data_pierwszej_rejestracji": "Data pierwszej rejestracji",
-    "vin": "Numer VIN",
-    "masa_dopuszczalna": "Masa dopuszczalna",
-    "tablica_rejestracyjna": "Tablica rejestracyjna",
-    "czy_ma_hak": "Czy ma hak",
-    "utracony": "Utracony",
-    "moc_kW": "Moc (kW)",
-    "czy_ma_lpg": "Czy ma LPG",
-    "data_waznosci_badania": "Data ważności badania technicznego",
-    "czy_badanie_techniczne_wazne": "Czy badanie techniczne ważne",
-    "nadwozie": "Rodzaj nadwozia",
-    "marka": "Marka",
-    "kolor": "Kolor",
-    "czy_ubezpieczony": "Czy ubezpieczony",
-    "imie_wlasciciela": "Imię właściciela",
-    "nr_dowodu_rejestracyjnego": "Numer dowodu rejestracyjnego",
-    "moc_KM": "Moc (KM)",
-    "data_waznosci_ubezpieczenia": "Data ważności ubezpieczenia",
-    "rodzaj_paliwa": "Rodzaj paliwa",
-    "model": "Model",
-    "dozwolona_ilosc_osob": "Dozwolona ilość osób"
-  };
-
-  const osobaKeys = {
-    pierwsze_imie: "Imię",
-    drugie_imie: "Drugie imię",
-    nazwisko: "Nazwisko",
-    nazwisko_rodowe: "Nazwisko rodowe",
-    imie_ojca: "Imię ojca",
-    imie_matki: "Imię matki",
-    nazwisko_rodowe_matki: "Nazwisko rodowe matki",
-    data_urodzenia: "Data urodzenia",
-    miejsce_urodzenia: "Miejsce urodzenia",
-    pesel: "PESEL",
-    adres_zamieszkania: "Adres zamieszkania",
-    nr_do: "Numer dowodu osobistego",
-    kto_wydal_do: "Organ wydający dowodu",
-    data_waznosci_do: "Ważność dowodu",
-    czy_do_wazny: "Czy dowód osobisty ważny",
-    status_do: "Status dowodu osobistego",
-    numer_pj: "Numer prawa jazdy",
-    data_waznosci_pj: "Ważność prawa jazdy",
-    status_pj: "Status prawa jazdy",
-    ilosc_punktow_karnych: "Ilość punktów karnych",
-    kategorie_uprawnien: "Kategorie uprawnień",
-    wymagania: "Wymagania",
-    poszukiwana: "Osoba poszukiwana"
-  };
-
-  async function pobierzDaneInterwencji() {
-    if (!interwencjaId) return;
-
-    try {
-      const response = await fetch(`/pobierz_dane_interwencji?id=${interwencjaId}`);
-      const data = await response.json();
-
-      if (data.error) {
-        alert("Błąd: " + data.error);
-        return;
-      }
-
-      const listaPojazdow = document.getElementById("listaPojazdow");
-      const listaOsob = document.getElementById("listaOsob");
-
-      data.pojazdy.forEach(pojazd => {
-        const div = document.createElement("div");
-        div.classList.add("alert", "alert-info", "m-1");
-        div.textContent = pojazd;
-        div.id = pojazd;
-        div.style.cursor = "pointer";
-        div.onclick = () => pokazDanePojazdu(pojazd);
-        listaPojazdow.appendChild(div);
-      });
-
-      data.osoby.forEach(pesel => {
-        const div = document.createElement("div");
-        div.classList.add("alert", "alert-success", "m-1");
-        div.textContent = pesel;
-        div.id = pesel;
-        div.style.cursor = "pointer";
-        div.onclick = () => pokazDaneOsoby(pesel);
-        listaOsob.appendChild(div);
-      });
-
-    } catch (err) {
-      console.error("Błąd podczas pobierania danych:", err);
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
-  }
 
-  async function pokazDaneOsoby(pesel) {
-    try {
-      const response = await fetch(`/osoba/?pesel=${pesel}`);
-      const data = await response.json();
+    const interwencjaId = getCookie("interwencja_id");
 
-      if (data.length > 0) {
-        const osoba = data[0];
-        let html = "<strong>Dane osoby:</strong><br><br>";
+    const pojazdKeys = {
+        "typ_pojazdu": "Typ pojazdu",
+        "samochód_ciężarowy": "Samochód ciężarowy",
+        "dopuszczalny_nacisk_osi": "Dopuszczalny nacisk osi",
+        "pesel_wlasciciela": "PESEL właściciela",
+        "czy_badanie_techniczne": "Czy badanie techniczne wykonane",
+        "nazwisko_wlasciciela": "Nazwisko właściciela",
+        "rocznik": "Rocznik",
+        "masa_wlasna": "Masa własna",
+        "data_pierwszej_rejestracji": "Data pierwszej rejestracji",
+        "vin": "Numer VIN",
+        "masa_dopuszczalna": "Masa dopuszczalna",
+        "tablica_rejestracyjna": "Tablica rejestracyjna",
+        "czy_ma_hak": "Czy ma hak",
+        "utracony": "Utracony",
+        "moc_kW": "Moc (kW)",
+        "czy_ma_lpg": "Czy ma LPG",
+        "data_waznosci_badania": "Data ważności badania technicznego",
+        "czy_badanie_techniczne_wazne": "Czy badanie techniczne ważne",
+        "nadwozie": "Rodzaj nadwozia",
+        "marka": "Marka",
+        "kolor": "Kolor",
+        "czy_ubezpieczony": "Czy ubezpieczony",
+        "imie_wlasciciela": "Imię właściciela",
+        "nr_dowodu_rejestracyjnego": "Numer dowodu rejestracyjnego",
+        "moc_KM": "Moc (KM)",
+        "data_waznosci_ubezpieczenia": "Data ważności ubezpieczenia",
+        "rodzaj_paliwa": "Rodzaj paliwa",
+        "model": "Model",
+        "dozwolona_ilosc_osob": "Dozwolona ilość osób"
+    };
 
-        for (const key of Object.keys(osobaKeys)) {
-          if (osoba[key] !== undefined) {
-            html += `<strong>${osobaKeys[key]}:</strong> ${osoba[key]}<br>`;
-          }
+    const osobaKeys = {
+        pierwsze_imie: "Imię",
+        drugie_imie: "Drugie imię",
+        nazwisko: "Nazwisko",
+        nazwisko_rodowe: "Nazwisko rodowe",
+        imie_ojca: "Imię ojca",
+        imie_matki: "Imię matki",
+        nazwisko_rodowe_matki: "Nazwisko rodowe matki",
+        data_urodzenia: "Data urodzenia",
+        miejsce_urodzenia: "Miejsce urodzenia",
+        pesel: "PESEL",
+        adres_zamieszkania: "Adres zamieszkania",
+        nr_do: "Numer dowodu osobistego",
+        kto_wydal_do: "Organ wydający dowodu",
+        data_waznosci_do: "Ważność dowodu",
+        czy_do_wazny: "Czy dowód osobisty ważny",
+        status_do: "Status dowodu osobistego",
+        numer_pj: "Numer prawa jazdy",
+        data_waznosci_pj: "Ważność prawa jazdy",
+        status_pj: "Status prawa jazdy",
+        ilosc_punktow_karnych: "Ilość punktów karnych",
+        kategorie_uprawnien: "Kategorie uprawnień",
+        wymagania: "Wymagania",
+        poszukiwana: "Osoba poszukiwana"
+    };
+
+    async function pobierzDaneInterwencji() {
+        if (!interwencjaId) return;
+
+        try {
+            const response = await fetch(`/pobierz_dane_interwencji?id=${interwencjaId}`);
+            const data = await response.json();
+
+            if (data.error) {
+                alert("Błąd: " + data.error);
+                return;
+            }
+
+            const listaPojazdow = document.getElementById("listaPojazdow");
+            const listaOsob = document.getElementById("listaOsob");
+
+            data.pojazdy.forEach(pojazd => {
+                const div = document.createElement("div");
+                div.classList.add("alert", "alert-info", "m-1");
+                div.textContent = pojazd;
+                div.id = pojazd;
+                div.style.cursor = "pointer";
+                div.onclick = () => pokazDanePojazdu(pojazd);
+                listaPojazdow.appendChild(div);
+            });
+
+            data.osoby.forEach(pesel => {
+                const div = document.createElement("div");
+                div.classList.add("alert", "alert-success", "m-1");
+                div.textContent = pesel;
+                div.id = pesel;
+                div.style.cursor = "pointer";
+                div.onclick = () => pokazDaneOsoby(pesel);
+                listaOsob.appendChild(div);
+            });
+
+        } catch (err) {
+            console.error("Błąd podczas pobierania danych:", err);
         }
-
-        pokazModal(html);
-      } else {
-        pokazModal("Nie znaleziono osoby.");
-      }
-    } catch (err) {
-      pokazModal("Błąd podczas pobierania danych osoby.");
     }
-  }
 
-  async function pokazDanePojazdu(identyfikator) {
-    try {
-      const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
-      const data = await response.json();
+    async function pokazDaneOsoby(pesel) {
+        try {
+            const response = await fetch(`/osoba/?pesel=${pesel}`);
+            const data = await response.json();
 
-      if (!data.error) {
-        let html = "<strong>Dane pojazdu:</strong><br><br>";
+            if (data.length > 0) {
+                const osoba = data[0];
+                let html = "<strong>Dane osoby:</strong><br><br>";
 
-        for (const key of Object.keys(pojazdKeys)) {
-          if (data[key] !== undefined) {
-            html += `<strong>${pojazdKeys[key]}:</strong> ${data[key]}<br>`;
-          }
+                for (const key of Object.keys(osobaKeys)) {
+                    if (osoba[key] !== undefined) {
+                        html += `<strong>${osobaKeys[key]}:</strong> ${osoba[key]}<br>`;
+                    }
+                }
+
+                pokazModal(html);
+            } else {
+                pokazModal("Nie znaleziono osoby.");
+            }
+        } catch (err) {
+            pokazModal("Błąd podczas pobierania danych osoby.");
         }
-
-        pokazModal(html);
-      } else {
-        pokazModal("Nie znaleziono pojazdu.");
-      }
-    } catch (err) {
-      pokazModal("Błąd podczas pobierania danych pojazdu.");
     }
-  }
 
-  function pokazModal(tresc) {
-    document.getElementById("modalTresc").innerHTML = tresc;
-    document.getElementById("overlay").style.display = "block";
-    document.getElementById("modal").style.display = "block";
-  }
+    async function pokazDanePojazdu(identyfikator) {
+        try {
+            const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
+            const data = await response.json();
 
-  function zamknijModal() {
-    document.getElementById("overlay").style.display = "none";
-    document.getElementById("modal").style.display = "none";
-  }
+            if (!data.error) {
+                let html = "<strong>Dane pojazdu:</strong><br><br>";
 
-  pobierzDaneInterwencji();
+                for (const key of Object.keys(pojazdKeys)) {
+                    if (data[key] !== undefined) {
+                        html += `<strong>${pojazdKeys[key]}:</strong> ${data[key]}<br>`;
+                    }
+                }
+
+                pokazModal(html);
+            } else {
+                pokazModal("Nie znaleziono pojazdu.");
+            }
+        } catch (err) {
+            pokazModal("Błąd podczas pobierania danych pojazdu.");
+        }
+    }
+
+    function pokazModal(tresc) {
+        document.getElementById("modalTresc").innerHTML = tresc;
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("modal").style.display = "block";
+    }
+
+    function zamknijModal() {
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("modal").style.display = "none";
+    }
+
+    pobierzDaneInterwencji();
 </script>
 
 

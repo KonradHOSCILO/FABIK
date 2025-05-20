@@ -7,264 +7,266 @@
             <a class="navbar-brand" href="#">Podsumowanie interwencji</a>
         </div>
     </nav>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
 </head>
 
 <body class="bg-light">
 
-  <div class="container mt-5">
+<div class="container mt-5">
     <div class="d-flex align-items-center mb-3">
-      <a href="/szukaj_wybor_html" class="btn bg-white shadow-sm border rounded-3 px-3">
-        <i class="bi bi-arrow-left"></i>
-      </a>
+        <a href="/szukaj_wybor_html" class="btn bg-white shadow-sm border rounded-3 px-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
 
     </div>
 
     <div class="card shadow p-4 border rounded-3">
 
 
-      <form id="notatkaForm">
+        <form id="notatkaForm">
 
-        <div class="mb-3">
-          <label for="notatka" class="form-label fw-bold">Treść Notatki</label>
-          <textarea class="form-control" id="notatka" rows="4" placeholder="Wpisz treść notatki..."  required></textarea>
-        </div>
+            <div class="mb-3">
+                <label for="notatka" class="form-label fw-bold">Treść Notatki</label>
+                <textarea class="form-control" id="notatka" rows="4" placeholder="Wpisz treść notatki..."
+                          required></textarea>
+            </div>
 
-        <div id="dodanePojazdy" class="mt-4">
-          <h5 class="text-center">Dodane pojazdy:</h5>
-          <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
-        </div>
+            <div id="dodanePojazdy" class="mt-4">
+                <h5 class="text-center">Dodane pojazdy:</h5>
+                <div class="d-flex flex-wrap justify-content-center" id="listaPojazdow"></div>
+            </div>
 
-        <div id="dodaneOsoby" class="mt-4">
-          <h5 class="text-center">Dodane osoby:</h5>
-          <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
-        </div>
+            <div id="dodaneOsoby" class="mt-4">
+                <h5 class="text-center">Dodane osoby:</h5>
+                <div class="d-flex flex-wrap justify-content-center" id="listaOsob"></div>
+            </div>
 
-        <div class="mt-4 d-flex justify-content-center">
-          <button type="submit" class="btn btn-primary">Zapisz notatkę i zakończ interwencję</button>
-        </div>
-      </form>
+            <div class="mt-4 d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary">Zapisz notatkę i zakończ interwencję</button>
+            </div>
+        </form>
 
-      <div id="notatkaStatus" class="mt-3"></div>
+        <div id="notatkaStatus" class="mt-3"></div>
     </div>
-  </div>
+</div>
 
 
-  <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+<div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
     background-color: rgba(0, 0, 0, 0.5); z-index: 1000;" onclick="zamknijModal()"></div>
 
-  <div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+<div id="modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
     background:white; padding:20px; border-radius:10px; z-index:1001; max-width:90%; min-width:300px;">
     <h5 id="modalTresc">Dane</h5>
-  </div>
-  <script>
+</div>
+<script>
     function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
+
     const interwencjaId = getCookie("interwencja_id");
 
-     document.getElementById("notatkaForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const notatka = document.getElementById("notatka").value.trim();
+    document.getElementById("notatkaForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const notatka = document.getElementById("notatka").value.trim();
 
-      if (!interwencjaId || !notatka) {
-        document.getElementById("notatkaStatus").innerHTML = "<div class='alert alert-danger'>Proszę wypełnić treść notatki!</div>";
-        return;
-      }
+        if (!interwencjaId || !notatka) {
+            document.getElementById("notatkaStatus").innerHTML = "<div class='alert alert-danger'>Proszę wypełnić treść notatki!</div>";
+            return;
+        }
 
-      const payload = {
-        interwencja_id: interwencjaId,
-        notatka: notatka
-      };
+        const payload = {
+            interwencja_id: interwencjaId,
+            notatka: notatka
+        };
 
-      try {
-        const response = await fetch("/zakoncz_notatke/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken")
-          },
-          body: JSON.stringify(payload)
-        });
+        try {
+            const response = await fetch("/zakoncz_notatke/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify(payload)
+            });
 
-        const result = await response.json();
-      if (response.ok && result.status === "ok") {
-        window.location.href = "/strona_glowna_html";
-      } else {
-        alert("Błąd: " + (result.error || "Nie udało się zakończyć interwencji, spróbuj ponownie."));
-      }
-    } catch (error) {
-      console.error("Błąd żądania:", error);
-      alert("Wystąpił błąd przy dodawaniu notatki.");
-    }
-  });
+            const result = await response.json();
+            if (response.ok && result.status === "ok") {
+                window.location.href = "/strona_glowna_html";
+            } else {
+                alert("Błąd: " + (result.error || "Nie udało się zakończyć interwencji, spróbuj ponownie."));
+            }
+        } catch (error) {
+            console.error("Błąd żądania:", error);
+            alert("Wystąpił błąd przy dodawaniu notatki.");
+        }
+    });
 
     const pojazdKeys = {
-      "typ_pojazdu": "Typ pojazdu",
-      "samochód_ciężarowy": "Samochód ciężarowy",
-      "dopuszczalny_nacisk_osi": "Dopuszczalny nacisk osi",
-      "pesel_wlasciciela": "PESEL właściciela",
-      "czy_badanie_techniczne": "Czy badanie techniczne wykonane",
-      "nazwisko_wlasciciela": "Nazwisko właściciela",
-      "rocznik": "Rocznik",
-      "masa_wlasna": "Masa własna",
-      "data_pierwszej_rejestracji": "Data pierwszej rejestracji",
-      "vin": "Numer VIN",
-      "masa_dopuszczalna": "Masa dopuszczalna",
-      "tablica_rejestracyjna": "Tablica rejestracyjna",
-      "czy_ma_hak": "Czy ma hak",
-      "utracony": "Utracony",
-      "moc_kW": "Moc (kW)",
-      "czy_ma_lpg": "Czy ma LPG",
-      "data_waznosci_badania": "Data ważności badania technicznego",
-      "czy_badanie_techniczne_wazne": "Czy badanie techniczne ważne",
-      "nadwozie": "Rodzaj nadwozia",
-      "marka": "Marka",
-      "kolor": "Kolor",
-      "czy_ubezpieczony": "Czy ubezpieczony",
-      "imie_wlasciciela": "Imię właściciela",
-      "nr_dowodu_rejestracyjnego": "Numer dowodu rejestracyjnego",
-      "moc_KM": "Moc (KM)",
-      "data_waznosci_ubezpieczenia": "Data ważności ubezpieczenia",
-      "rodzaj_paliwa": "Rodzaj paliwa",
-      "model": "Model",
-      "dozwolona_ilosc_osob": "Dozwolona ilość osób"
+        "typ_pojazdu": "Typ pojazdu",
+        "samochód_ciężarowy": "Samochód ciężarowy",
+        "dopuszczalny_nacisk_osi": "Dopuszczalny nacisk osi",
+        "pesel_wlasciciela": "PESEL właściciela",
+        "czy_badanie_techniczne": "Czy badanie techniczne wykonane",
+        "nazwisko_wlasciciela": "Nazwisko właściciela",
+        "rocznik": "Rocznik",
+        "masa_wlasna": "Masa własna",
+        "data_pierwszej_rejestracji": "Data pierwszej rejestracji",
+        "vin": "Numer VIN",
+        "masa_dopuszczalna": "Masa dopuszczalna",
+        "tablica_rejestracyjna": "Tablica rejestracyjna",
+        "czy_ma_hak": "Czy ma hak",
+        "utracony": "Utracony",
+        "moc_kW": "Moc (kW)",
+        "czy_ma_lpg": "Czy ma LPG",
+        "data_waznosci_badania": "Data ważności badania technicznego",
+        "czy_badanie_techniczne_wazne": "Czy badanie techniczne ważne",
+        "nadwozie": "Rodzaj nadwozia",
+        "marka": "Marka",
+        "kolor": "Kolor",
+        "czy_ubezpieczony": "Czy ubezpieczony",
+        "imie_wlasciciela": "Imię właściciela",
+        "nr_dowodu_rejestracyjnego": "Numer dowodu rejestracyjnego",
+        "moc_KM": "Moc (KM)",
+        "data_waznosci_ubezpieczenia": "Data ważności ubezpieczenia",
+        "rodzaj_paliwa": "Rodzaj paliwa",
+        "model": "Model",
+        "dozwolona_ilosc_osob": "Dozwolona ilość osób"
     };
 
     const osobaKeys = {
-      pierwsze_imie: "Imię",
-      drugie_imie: "Drugie imię",
-      nazwisko: "Nazwisko",
-      nazwisko_rodowe: "Nazwisko rodowe",
-      imie_ojca: "Imię ojca",
-      imie_matki: "Imię matki",
-      nazwisko_rodowe_matki: "Nazwisko rodowe matki",
-      data_urodzenia: "Data urodzenia",
-      miejsce_urodzenia: "Miejsce urodzenia",
-      pesel: "PESEL",
-      adres_zamieszkania: "Adres zamieszkania",
-      nr_do: "Numer dowodu osobistego",
-      kto_wydal_do: "Organ wydający dowodu",
-      data_waznosci_do: "Ważność dowodu",
-      czy_do_wazny: "Czy dowód osobisty ważny",
-      status_do: "Status dowodu osobistego",
-      numer_pj: "Numer prawa jazdy",
-      data_waznosci_pj: "Ważność prawa jazdy",
-      status_pj: "Status prawa jazdy",
-      ilosc_punktow_karnych: "Ilość punktów karnych",
-      kategorie_uprawnien: "Kategorie uprawnień",
-      wymagania: "Wymagania",
-      poszukiwana: "Osoba poszukiwana"
+        pierwsze_imie: "Imię",
+        drugie_imie: "Drugie imię",
+        nazwisko: "Nazwisko",
+        nazwisko_rodowe: "Nazwisko rodowe",
+        imie_ojca: "Imię ojca",
+        imie_matki: "Imię matki",
+        nazwisko_rodowe_matki: "Nazwisko rodowe matki",
+        data_urodzenia: "Data urodzenia",
+        miejsce_urodzenia: "Miejsce urodzenia",
+        pesel: "PESEL",
+        adres_zamieszkania: "Adres zamieszkania",
+        nr_do: "Numer dowodu osobistego",
+        kto_wydal_do: "Organ wydający dowodu",
+        data_waznosci_do: "Ważność dowodu",
+        czy_do_wazny: "Czy dowód osobisty ważny",
+        status_do: "Status dowodu osobistego",
+        numer_pj: "Numer prawa jazdy",
+        data_waznosci_pj: "Ważność prawa jazdy",
+        status_pj: "Status prawa jazdy",
+        ilosc_punktow_karnych: "Ilość punktów karnych",
+        kategorie_uprawnien: "Kategorie uprawnień",
+        wymagania: "Wymagania",
+        poszukiwana: "Osoba poszukiwana"
     };
 
     async function pobierzDaneInterwencji() {
-      if (!interwencjaId) return;
+        if (!interwencjaId) return;
 
-      try {
-        const response = await fetch(`/pobierz_dane_interwencji/?id=${interwencjaId}`);
-        const data = await response.json();
+        try {
+            const response = await fetch(`/pobierz_dane_interwencji/?id=${interwencjaId}`);
+            const data = await response.json();
 
-        if (data.error) {
-          alert("Błąd: " + data.error);
-          return;
+            if (data.error) {
+                alert("Błąd: " + data.error);
+                return;
+            }
+
+            const listaPojazdow = document.getElementById("listaPojazdow");
+            const listaOsob = document.getElementById("listaOsob");
+
+            listaPojazdow.innerHTML = '';
+            data.pojazdy.forEach(pojazd => {
+                const div = document.createElement("div");
+                div.classList.add("alert", "alert-info", "m-1");
+                div.textContent = pojazd;
+                div.id = pojazd;
+                div.style.cursor = "pointer";
+                div.onclick = () => pokazDanePojazdu(pojazd);
+                listaPojazdow.appendChild(div);
+            });
+
+            listaOsob.innerHTML = '';
+            data.osoby.forEach(pesel => {
+                const div = document.createElement("div");
+                div.classList.add("alert", "alert-success", "m-1");
+                div.textContent = pesel;
+                div.id = pesel;
+                div.style.cursor = "pointer";
+                div.onclick = () => pokazDaneOsoby(pesel);
+                listaOsob.appendChild(div);
+            });
+
+        } catch (err) {
+            console.error("Błąd podczas pobierania danych:", err);
         }
-
-        const listaPojazdow = document.getElementById("listaPojazdow");
-        const listaOsob = document.getElementById("listaOsob");
-
-        listaPojazdow.innerHTML = ''; // Wyczyść poprzednie dane
-        data.pojazdy.forEach(pojazd => {
-          const div = document.createElement("div");
-          div.classList.add("alert", "alert-info", "m-1");
-          div.textContent = pojazd;
-          div.id = pojazd;
-          div.style.cursor = "pointer";
-          div.onclick = () => pokazDanePojazdu(pojazd);
-          listaPojazdow.appendChild(div);
-        });
-
-        listaOsob.innerHTML = ''; // Wyczyść poprzednie dane
-        data.osoby.forEach(pesel => {
-          const div = document.createElement("div");
-          div.classList.add("alert", "alert-success", "m-1");
-          div.textContent = pesel;
-          div.id = pesel;
-          div.style.cursor = "pointer";
-          div.onclick = () => pokazDaneOsoby(pesel);
-          listaOsob.appendChild(div);
-        });
-
-      } catch (err) {
-        console.error("Błąd podczas pobierania danych:", err);
-      }
     }
 
     async function pokazDaneOsoby(pesel) {
-      try {
-        const response = await fetch(`/osoba/?pesel=${pesel}`);
-        const data = await response.json();
+        try {
+            const response = await fetch(`/osoba/?pesel=${pesel}`);
+            const data = await response.json();
 
-        if (data.length > 0) {
-          const osoba = data[0];
-          let html = "<strong>Dane osoby:</strong><br><br>";
+            if (data.length > 0) {
+                const osoba = data[0];
+                let html = "<strong>Dane osoby:</strong><br><br>";
 
-          for (const key of Object.keys(osobaKeys)) {
-            if (osoba[key] !== undefined) {
-              html += `<strong>${osobaKeys[key]}:</strong> ${osoba[key]}<br>`;
+                for (const key of Object.keys(osobaKeys)) {
+                    if (osoba[key] !== undefined) {
+                        html += `<strong>${osobaKeys[key]}:</strong> ${osoba[key]}<br>`;
+                    }
+                }
+
+                pokazModal(html);
+            } else {
+                pokazModal("Nie znaleziono osoby.");
             }
-          }
-
-          pokazModal(html);
-        } else {
-          pokazModal("Nie znaleziono osoby.");
+        } catch (err) {
+            pokazModal("Błąd podczas pobierania danych osoby.");
         }
-      } catch (err) {
-        pokazModal("Błąd podczas pobierania danych osoby.");
-      }
     }
 
     async function pokazDanePojazdu(identyfikator) {
-      try {
-        const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
-        const data = await response.json();
+        try {
+            const response = await fetch(`/pojazd/?identyfikator=${identyfikator}`);
+            const data = await response.json();
 
-        if (!data.error) {
-          let html = "<strong>Dane pojazdu:</strong><br><br>";
+            if (!data.error) {
+                let html = "<strong>Dane pojazdu:</strong><br><br>";
 
-          for (const key of Object.keys(pojazdKeys)) {
-            if (data[key] !== undefined) {
-              html += `<strong>${pojazdKeys[key]}:</strong> ${data[key]}<br>`;
+                for (const key of Object.keys(pojazdKeys)) {
+                    if (data[key] !== undefined) {
+                        html += `<strong>${pojazdKeys[key]}:</strong> ${data[key]}<br>`;
+                    }
+                }
+
+                pokazModal(html);
+            } else {
+                pokazModal("Nie znaleziono pojazdu.");
             }
-          }
-
-          pokazModal(html);
-        } else {
-          pokazModal("Nie znaleziono pojazdu.");
+        } catch (err) {
+            pokazModal("Błąd podczas pobierania danych pojazdu.");
         }
-      } catch (err) {
-        pokazModal("Błąd podczas pobierania danych pojazdu.");
-      }
     }
 
     function pokazModal(tresc) {
-      document.getElementById("modalTresc").innerHTML = tresc;
-      document.getElementById("overlay").style.display = "block";
-      document.getElementById("modal").style.display = "block";
+        document.getElementById("modalTresc").innerHTML = tresc;
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("modal").style.display = "block";
     }
 
     function zamknijModal() {
-      document.getElementById("overlay").style.display = "none";
-      document.getElementById("modal").style.display = "none";
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("modal").style.display = "none";
     }
 
     pobierzDaneInterwencji();
-  </script>
+</script>
 
 </body>
 

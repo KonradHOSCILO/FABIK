@@ -7,192 +7,192 @@
             <a class="navbar-brand" href="#">Legitymowanie osoby za pomocą danych osobowych</a>
         </div>
     </nav>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wyszukiwanie po danych</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Wyszukiwanie po danych</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
 </head>
 
 <body class="bg-light">
 
-  <div class="container mt-5">
+<div class="container mt-5">
     <div class="d-flex align-items-center mb-3">
-      <a href="/szukaj_osoba_sposob_html" class="btn bg-white shadow-sm border rounded-3 px-3">
-        <i class="bi bi-arrow-left"></i>
-      </a>
+        <a href="/szukaj_osoba_sposob_html" class="btn bg-white shadow-sm border rounded-3 px-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
 
     </div>
 
     <div class="card shadow p-4 border rounded-3">
-      <h5 class="text-center mb-3">Wyszukiwanie po danych osobowych</h5>
-      <form id="osobaForm">
-        <div class="mb-3">
-          <label for="imie" class="form-label fw-bold">Imię</label>
-          <input type="text" class="form-control" id="imie" placeholder="Jan" required/>
-        </div>
-        <div class="mb-3">
-          <label for="nazwisko" class="form-label fw-bold">Nazwisko</label>
-          <input type="text" class="form-control" id="nazwisko" placeholder="Kowalski" required/>
-        </div>
-        <div class="mb-3">
-          <label for="dataUrodzenia" class="form-label fw-bold">Data urodzenia</label>
-          <input type="text" class="form-control" id="dataUrodzenia" placeholder="YYYY-MM-DD" required/>
-        </div>
-        <div class="d-grid">
-          <button type="submit" class="btn btn-primary">Sprawdź</button>
-        </div>
-      </form>
-      <div class="mt-4" id="osobaWynik"></div>
+        <h5 class="text-center mb-3">Wyszukiwanie po danych osobowych</h5>
+        <form id="osobaForm">
+            <div class="mb-3">
+                <label for="imie" class="form-label fw-bold">Imię</label>
+                <input type="text" class="form-control" id="imie" placeholder="Jan" required/>
+            </div>
+            <div class="mb-3">
+                <label for="nazwisko" class="form-label fw-bold">Nazwisko</label>
+                <input type="text" class="form-control" id="nazwisko" placeholder="Kowalski" required/>
+            </div>
+            <div class="mb-3">
+                <label for="dataUrodzenia" class="form-label fw-bold">Data urodzenia</label>
+                <input type="text" class="form-control" id="dataUrodzenia" placeholder="YYYY-MM-DD" required/>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Sprawdź</button>
+            </div>
+        </form>
+        <div class="mt-4" id="osobaWynik"></div>
 
-      <div class="mt-4 d-flex justify-content-center">
-        <button id="addPersonButton" class="btn btn-success">Dodaj osobę do interwencji</button>
-      </div>
+        <div class="mt-4 d-flex justify-content-center">
+            <button id="addPersonButton" class="btn btn-success">Dodaj osobę do interwencji</button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <script>
-  document.getElementById("osobaForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+<script>
+    document.getElementById("osobaForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-    const imie = document.getElementById("imie").value.trim();
-    const nazwisko = document.getElementById("nazwisko").value.trim();
-    const data_urodzenia = document.getElementById("dataUrodzenia").value.trim();
-    if (!imie || !nazwisko || !data_urodzenia) return;
+        const imie = document.getElementById("imie").value.trim();
+        const nazwisko = document.getElementById("nazwisko").value.trim();
+        const data_urodzenia = document.getElementById("dataUrodzenia").value.trim();
+        if (!imie || !nazwisko || !data_urodzenia) return;
 
-    const response = await fetch(`/osoba/?imie=${imie}&nazwisko=${nazwisko}&data_urodzenia=${data_urodzenia}`);
-    const data = await response.json();
-    const wynikDiv = document.getElementById("osobaWynik");
+        const response = await fetch(`/osoba/?imie=${imie}&nazwisko=${nazwisko}&data_urodzenia=${data_urodzenia}`);
+        const data = await response.json();
+        const wynikDiv = document.getElementById("osobaWynik");
 
-    if (data.length > 0) {
-      const osoba = data[0];
+        if (data.length > 0) {
+            const osoba = data[0];
 
-      const pola = {
-        pierwsze_imie: "Imię",
-        drugie_imie: "Drugie imię",
-        nazwisko: "Nazwisko",
-        nazwisko_rodowe: "Nazwisko rodowe",
-        imie_ojca: "Imię ojca",
-        imie_matki: "Imię matki",
-        nazwisko_rodowe_matki: "Nazwisko rodowe matki",
-        data_urodzenia: "Data urodzenia",
-        miejsce_urodzenia: "Miejsce urodzenia",
-        pesel: "PESEL",
-        adres_zamieszkania: "Adres zamieszkania",
-        nr_do: "Numer dowodu osobistego",
-        kto_wydal_do: "Organ wydający dowód",
-        data_waznosci_do: "Ważność DO",
-        czy_do_wazny: "Czy dowód osobisty ważny",
-        status_do: "Status dowodu osobistego",
-        numer_pj: "Numer prawa jazdy",
-        data_waznosci_pj: "Ważność prawa jazdy",
-        status_pj: "Status prawa jazdy",
-        ilosc_punktow_karnych: "Ilość punktów karnych",
-        kategorie_uprawnien: "Kategorie uprawnień",
-        wymagania: "Wymagania",
-        poszukiwana: "Osoba poszukiwana"
-      };
+            const pola = {
+                pierwsze_imie: "Imię",
+                drugie_imie: "Drugie imię",
+                nazwisko: "Nazwisko",
+                nazwisko_rodowe: "Nazwisko rodowe",
+                imie_ojca: "Imię ojca",
+                imie_matki: "Imię matki",
+                nazwisko_rodowe_matki: "Nazwisko rodowe matki",
+                data_urodzenia: "Data urodzenia",
+                miejsce_urodzenia: "Miejsce urodzenia",
+                pesel: "PESEL",
+                adres_zamieszkania: "Adres zamieszkania",
+                nr_do: "Numer dowodu osobistego",
+                kto_wydal_do: "Organ wydający dowód",
+                data_waznosci_do: "Ważność DO",
+                czy_do_wazny: "Czy dowód osobisty ważny",
+                status_do: "Status dowodu osobistego",
+                numer_pj: "Numer prawa jazdy",
+                data_waznosci_pj: "Ważność prawa jazdy",
+                status_pj: "Status prawa jazdy",
+                ilosc_punktow_karnych: "Ilość punktów karnych",
+                kategorie_uprawnien: "Kategorie uprawnień",
+                wymagania: "Wymagania",
+                poszukiwana: "Osoba poszukiwana"
+            };
 
-      function formatValue(value) {
-        if (value === null || value === undefined) return "–";
-        if (typeof value === "boolean") return value ? "Tak" : "Nie";
-        if (Array.isArray(value)) {
-          // Obsługuje tablice
-          return value.map(item => {
-            // Sprawdza, czy element tablicy jest obiektem, jeśli tak, przetwarza go
-            if (typeof item === "object" && item !== null) {
-              return Object.entries(item)
-                .map(([key, val]) => `${key}: ${val}`)
-                .join(", ");
+            function formatValue(value) {
+                if (value === null || value === undefined) return "–";
+                if (typeof value === "boolean") return value ? "Tak" : "Nie";
+                if (Array.isArray(value)) {
+                    // Obsługuje tablice
+                    return value.map(item => {
+                        // Sprawdza, czy element tablicy jest obiektem, jeśli tak, przetwarza go
+                        if (typeof item === "object" && item !== null) {
+                            return Object.entries(item)
+                                .map(([key, val]) => `${key}: ${val}`)
+                                .join(", ");
+                        }
+                        return item;
+                    }).join(", ");
+                }
+                if (typeof value === "object") {
+                    // Obsługuje obiekty
+                    return Object.entries(value)
+                        .map(([key, val]) => `${key}: ${val}`)
+                        .join(", ");
+                }
+                return value;
             }
-            return item;
-          }).join(", ");
-        }
-        if (typeof value === "object") {
-          // Obsługuje obiekty
-          return Object.entries(value)
-            .map(([key, val]) => `${key}: ${val}`)
-            .join(", ");
-        }
-        return value;
-      }
 
-      let lista = "";
+            let lista = "";
 
-      for (const klucz in pola) {
-        if (osoba.hasOwnProperty(klucz)) {
-          const etykieta = pola[klucz];
-          const wartosc = formatValue(osoba[klucz]);
+            for (const klucz in pola) {
+                if (osoba.hasOwnProperty(klucz)) {
+                    const etykieta = pola[klucz];
+                    const wartosc = formatValue(osoba[klucz]);
 
-          lista += `<li class="list-group-item d-flex justify-content-between">
+                    lista += `<li class="list-group-item d-flex justify-content-between">
                       <strong class="w-50">${etykieta}</strong><span class="w-50 text-end">${wartosc}</span>
                     </li>`;
-        }
-      }
+                }
+            }
 
-      wynikDiv.innerHTML = `
+            wynikDiv.innerHTML = `
         <div class="card p-3">
           <h5>Dane osoby:</h5>
           <ul class="list-group list-group-flush">${lista}</ul>
         </div>
       `;
-    } else {
-      wynikDiv.innerHTML = `<div class='alert alert-warning'>Nie znaleziono osoby.</div>`;
+        } else {
+            wynikDiv.innerHTML = `<div class='alert alert-warning'>Nie znaleziono osoby.</div>`;
+        }
+    });
+
+    document.getElementById("addPersonButton").addEventListener("click", async function () {
+        try {
+            const interwencja_id = getCookie("interwencja_id");
+
+            const imie = document.getElementById("imie").value.trim();
+            const nazwisko = document.getElementById("nazwisko").value.trim();
+            const data_urodzenia = document.getElementById("dataUrodzenia").value.trim();
+
+            if (!imie || !nazwisko || !data_urodzenia) {
+                alert("Brakuje danych do dodania osoby.");
+                return;
+            }
+
+            if (!interwencja_id) {
+                alert("Brak ID interwencji w ciasteczkach.");
+                return;
+            }
+
+            const payload = {
+                interwencja_id,
+                imie,
+                nazwisko,
+                data_urodzenia
+            };
+
+            const response = await fetch("/dodaj_osobe_interwencja/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (response.ok && result.status === "ok") {
+                window.location.href = "/szukaj_wybor_html";
+            } else {
+                alert("Błąd: " + (result.error || "Nie udało się dodać osoby."));
+            }
+        } catch (error) {
+            console.error("Błąd żądania:", error);
+            alert("Wystąpił błąd przy dodawaniu osoby.");
+        }
+    });
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
-  });
-
-  document.getElementById("addPersonButton").addEventListener("click", async function () {
-    try {
-      const interwencja_id = getCookie("interwencja_id");
-
-      const imie = document.getElementById("imie").value.trim();
-      const nazwisko = document.getElementById("nazwisko").value.trim();
-      const data_urodzenia = document.getElementById("dataUrodzenia").value.trim();
-
-      if (!imie || !nazwisko || !data_urodzenia) {
-        alert("Brakuje danych do dodania osoby.");
-        return;
-      }
-
-      if (!interwencja_id) {
-        alert("Brak ID interwencji w ciasteczkach.");
-        return;
-      }
-
-      const payload = {
-        interwencja_id,
-        imie,
-        nazwisko,
-        data_urodzenia
-      };
-
-      const response = await fetch("/dodaj_osobe_interwencja/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken")
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      if (response.ok && result.status === "ok") {
-        window.location.href = "/szukaj_wybor_html";
-      } else {
-        alert("Błąd: " + (result.error || "Nie udało się dodać osoby."));
-      }
-    } catch (error) {
-      console.error("Błąd żądania:", error);
-      alert("Wystąpił błąd przy dodawaniu osoby.");
-    }
-  });
-
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
 </script>
 </body>
 

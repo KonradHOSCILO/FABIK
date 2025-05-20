@@ -4,98 +4,100 @@
 
 {% block content %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">Strona główna patrolu {{ user.username }}</a>
-        <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-secondary w-100">Wyloguj się</button>
-        </form>
-    </div>
-</nav>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Strona główna patrolu {{ user.username }}</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary w-100">Wyloguj się</button>
+            </form>
+        </div>
+    </nav>
     <div class="container mt-4">
 
-        <!-- Nagłówek -->
 
-
-        <!-- Kafelki -->
         <div class="card shadow p-4">
-    <div class="row g-3 align-items-stretch"> <!-- dodano align-items-stretch -->
+            <div class="row g-3 align-items-stretch">
 
-        <!-- Pierwszy kafelek -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100"> <!-- dodano h-100 -->
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center flex-wrap" >
-                        <div>
-                            <strong> Status patrolu {{ user.username }}:</strong>
-                            <span id="patrol-status" data-patrol-number="{{ user.username|lower }}">Ładowanie...</span>
-                        </div>
-                        <div class="dropdown ms-3">
-                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
-                                    id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Zmień status
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('wolny')">Wolny</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('w_drodze')">W drodze</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('awaria')">Awaria</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="setStatus('poza_pojazdem')">Poza pojazdem</a></li>
-                            </ul>
+
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div class="d-flex align-items-center flex-wrap">
+                                <div>
+                                    <strong> Status patrolu {{ user.username }}:</strong>
+                                    <span id="patrol-status"
+                                          data-patrol-number="{{ user.username|lower }}">Ładowanie...</span>
+                                </div>
+                                <div class="dropdown ms-3">
+                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button"
+                                            id="patrolStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Zmień status
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="patrolStatusDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);"
+                                               onclick="setStatus('wolny')">Wolny</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"
+                                               onclick="setStatus('w_drodze')">W drodze</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"
+                                               onclick="setStatus('awaria')">Awaria</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);"
+                                               onclick="setStatus('poza_pojazdem')">Poza pojazdem</a></li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Drugi kafelek -->
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100"> <!-- dodano h-100 -->
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <p class="text-secondary mb-1">Liczba przeprowadzonych interwencji dzisiejszego dnia</p>
-                    <h5 class="fw-bold">{{ interwencje_count }}</h5>
+
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <p class="text-secondary mb-1">Liczba przeprowadzonych interwencji dzisiejszego dnia</p>
+                            <h5 class="fw-bold">{{ interwencje_count }}</h5>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
 
-    </div>
-</div>
+
+        <div class="mt-3">
+            <form method="post" action="{% url 'rozpocznij_interwencje' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary w-100 py-3">Rozpocznij interwencję</button>
+            </form>
+        </div>
 
 
-            <!-- Przycisk -->
-            <div class="mt-3">
-                <form method="post" action="{% url 'rozpocznij_interwencje' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary w-100 py-3">Rozpocznij interwencję</button>
+        <div class="row g-3 mt-4 mb-4">
+
+            <div class="mt-4 mb-4">
+                <h4 class="text-center">Komunikaty</h4>
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body p-3" id="messages-box" style="height: 250px; overflow-y: auto;">
+                        <div class="d-flex flex-column gap-2" id="messages-container">
+                            <p class="text-muted mb-0">Ładowanie wiadomości...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="send-message-form" class="d-flex">
+                    <input type="text" class="form-control me-2" id="message-input" placeholder="Wpisz wiadomość..."
+                           required>
+                    <button type="submit" class="btn btn-primary">Wyślij</button>
                 </form>
             </div>
 
-            <!-- Pozostałe opcje -->
-            <div class="row g-3 mt-4 mb-4">
-
-                <div class="mt-4 mb-4">
-    <h4 class="text-center">Komunikaty</h4>
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-body p-3" id="messages-box" style="height: 250px; overflow-y: auto;">
-            <div class="d-flex flex-column gap-2" id="messages-container">
-                <p class="text-muted mb-0">Ładowanie wiadomości...</p>
+            <div>
+                <a href="/historia_html" class="btn btn-primary w-100" role="button">Sprawdź historię</a>
             </div>
+
         </div>
+
     </div>
-
-    <form id="send-message-form" class="d-flex">
-        <input type="text" class="form-control me-2" id="message-input" placeholder="Wpisz wiadomość..." required>
-        <button type="submit" class="btn btn-primary">Wyślij</button>
-    </form>
-</div>
-
-                <div>
-                    <a href="/historia_html" class="btn btn-primary w-100" role="button">Sprawdź historię</a>
-                </div>
-
-            </div>
-
-        </div>
 
     </div>
 
@@ -116,7 +118,7 @@
                 },
                 body: JSON.stringify({
                     tresc: text,
-                    odbiorca: "dyzurny"  // 👈 Zawsze wysyłamy do dyżurnego
+                    odbiorca: "dyzurny"
                 })
             })
                 .then(response => {
@@ -126,7 +128,7 @@
                 .then(data => {
                     input.value = "";
                     console.log("Wiadomość wysłana:", data);
-                    loadMessagesForPatrol(); // ⬅️ odśwież
+                    loadMessagesForPatrol();
                 })
                 .catch(error => {
                     console.error("Błąd wysyłania:", error);
@@ -213,100 +215,97 @@
             // Natychmiastowe pobranie statusu po załadowaniu
             refreshStatus();
 
-            // Odświeżanie statusu co 1 sekunde
+            // Odświeżanie statusu i wiadomości
             setInterval(refreshStatus, 1000);
             loadMessagesForPatrol();
             setInterval(loadMessagesForPatrol, 2000);
         });
         let firstLoad = true;
 
-function loadMessagesForPatrol() {
-    const patrolId = "{{ username|escapejs }}".toLowerCase();
-    console.log("Patrol ID:", patrolId);
+        function loadMessagesForPatrol() {
+            const patrolId = "{{ username|escapejs }}".toLowerCase();
+            console.log("Patrol ID:", patrolId);
 
-    const container = document.getElementById("messages-container");
+            const container = document.getElementById("messages-container");
 
-    // Pokaż "Ładowanie wiadomości..." tylko przy pierwszym wywołaniu
-    if (firstLoad) {
-        container.innerHTML = "<p class='text-muted'>Ładowanie wiadomości...</p>";
-        firstLoad = false;
-    }
-
-    fetch("/api/get_messages/all/")
-        .then(res => {
-            if (!res.ok) throw new Error(`Błąd HTTP: ${res.status}`);
-            return res.json();
-        })
-        .then(messages => {
-            console.log("Wszystkie wiadomości z API:", messages);
-
-            // Czyścimy i pokazujemy wiadomości dopiero po pobraniu
-            container.innerHTML = "";
-
-            const filtered = messages.filter(msg => {
-                const nadawca = (msg.nadawca || "").toLowerCase();
-                const odbiorca = (msg.odbiorca || "").toLowerCase();
-
-                const match =
-                    (nadawca === patrolId && odbiorca === "dyzurny") ||
-                    (nadawca === "dyzurny" && odbiorca === patrolId);
-
-                if (match) {
-                    console.log("✅ Pasuje:", msg);
-                } else {
-                    console.log("⛔ Nie pasuje:", { nadawca, odbiorca, patrolId });
-                }
-
-                return match;
-            });
-
-            if (!filtered.length) {
-                container.innerHTML = "<p class='text-muted'>Brak wiadomości</p>";
-                return;
+            // Pokaż "Ładowanie wiadomości..." tylko przy pierwszym wywołaniu
+            if (firstLoad) {
+                container.innerHTML = "<p class='text-muted'>Ładowanie wiadomości...</p>";
+                firstLoad = false;
             }
 
-            filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            fetch("/api/get_messages/all/")
+                .then(res => {
+                    if (!res.ok) throw new Error(`Błąd HTTP: ${res.status}`);
+                    return res.json();
+                })
+                .then(messages => {
+                    console.log("Wszystkie wiadomości z API:", messages);
 
-            for (const msg of filtered) {
-    const time = new Date(msg.timestamp).toLocaleTimeString("pl-PL", { hour12: false });
-    const from = msg.nadawca === "dyzurny" ? "Dyżurny" : msg.nadawca;
-    const to = msg.odbiorca === "dyzurny" ? "Dyżurny" : msg.odbiorca;
+                    // Czyścimy i pokazujemy wiadomości dopiero po pobraniu
+                    container.innerHTML = "";
 
-    const div = document.createElement("div");
-    div.className = "p-2 mb-2 rounded text-break";
+                    const filtered = messages.filter(msg => {
+                        const nadawca = (msg.nadawca || "").toLowerCase();
+                        const odbiorca = (msg.odbiorca || "").toLowerCase();
 
-    const prefix = `${time}, ${from} → ${to}: `;
-    const messageText = document.createElement("span");
-    messageText.textContent = msg.tresc;
+                        const match =
+                            (nadawca === patrolId && odbiorca === "dyzurny") ||
+                            (nadawca === "dyzurny" && (odbiorca === patrolId || odbiorca === "all"));
 
-    const header = document.createElement("div");
-    header.className = "fw-semibold mb-1";
-    header.textContent = prefix;
+                        if (match) {
+                            console.log("Pasuje:", msg);
+                        } else {
+                            console.log("Nie pasuje:", {nadawca, odbiorca, patrolId});
+                        }
 
-    if (msg.nadawca === "dyzurny") {
-        div.classList.add("bg-info-subtle", "text-dark"); // 👈 łagodniejsze niż bg-primary
-    } else {
-        div.classList.add("bg-light", "text-dark");
-    }
+                        return match;
+                    });
 
-    div.appendChild(header);
-    div.appendChild(messageText);
-    container.appendChild(div);
-}
+                    if (!filtered.length) {
+                        container.innerHTML = "<p class='text-muted'>Brak wiadomości</p>";
+                        return;
+                    }
 
-        })
-        .catch(err => {
-            console.error("❌ Błąd ładowania wiadomości:", err);
-            container.innerHTML = `<p class="text-danger">Błąd ładowania wiadomości: ${err.message}</p>`;
-        });
-}
+                    filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
+                    for (const msg of filtered) {
+                        const time = new Date(msg.timestamp).toLocaleTimeString("pl-PL", {hour12: false});
+                        const from = msg.nadawca === "dyzurny" ? "Dyżurny" : msg.nadawca;
+                        const to = msg.odbiorca === "dyzurny" ? "Dyżurny" : msg.odbiorca;
 
+                        const div = document.createElement("div");
+                        div.className = "p-2 mb-2 rounded text-break";
+
+                        const prefix = `${time}, ${from} → ${to}: `;
+                        const messageText = document.createElement("span");
+                        messageText.textContent = msg.tresc;
+
+                        const header = document.createElement("div");
+                        header.className = "fw-semibold mb-1";
+                        header.textContent = prefix;
+
+                        if (msg.nadawca === "dyzurny") {
+                            div.classList.add("bg-info-subtle", "text-dark");
+                        } else {
+                            div.classList.add("bg-light", "text-dark");
+                        }
+
+                        div.appendChild(header);
+                        div.appendChild(messageText);
+                        container.appendChild(div);
+                    }
+
+                })
+                .catch(err => {
+                    console.error("Błąd ładowania wiadomości:", err);
+                    container.innerHTML = `<p class="text-danger">Błąd ładowania wiadomości: ${err.message}</p>`;
+                });
+        }
 
     </script>
-
     <script>
-    console.log("Z backendu username =", "{{ username }}");
+        console.log("Z backendu username =", "{{ username }}");
     </script>
 
 {% endblock %}

@@ -26,28 +26,22 @@
             background-color: #198754;
         }
 
-        /* zielony */
         .status-w_drodze {
             background-color: #0d6efd;
         }
 
-        /* niebieski */
         .status-awaria {
             background-color: #dc3545;
         }
 
-        /* czerwony */
         .status-poza_pojazdem {
             background-color: #6c757d;
         }
 
-        /* szary */
         .status-na_interwencji {
             background-color: #fd7e14;
         }
 
-        /* pomarańcz */
-        /* Dodaj marginesy między komunikatami */
         #receivedMessages .alert {
             margin-bottom: 0.5rem;
         }
@@ -66,21 +60,21 @@
 
 <main class="container">
     <div class="row">
-        <!-- Lewa kolumna: Lista patroli -->
+
         <section class="col-md-6 mb-4">
             <h2>Lista patroli i ich statusy</h2>
             <div id="patrol-list" class="list-group">
-                <!-- Dynamicznie wypełniane -->
+
             </div>
             <div id="message" class="mt-3"></div>
             <a href="{% url 'historia_dyzurny' %}" class="btn btn-outline-primary mt-3">Zobacz historię interwencji</a>
         </section>
 
-        <!-- Prawa kolumna: Komunikaty -->
+
         <section class="col-md-6">
             <h2>Komunikaty</h2>
 
-            <!-- Otrzymane -->
+
             <div class="mb-4">
 
                 <label for="patrolSelect" class="form-label">Wybierz patrol:</label>
@@ -95,12 +89,12 @@
 
             </div>
 
-            <!-- Wyślij -->
+
             <div>
 
                 <form id="sendMessageForm" class="d-flex flex-column gap-2">
 
-                    <!-- Dynamicznie wypełniane -->
+
                     </select>
 
                     <label for="messageText" class="form-label">Treść wiadomości:</label>
@@ -150,14 +144,13 @@
         "na_interwencji": "status-na_interwencji"
     };
 
-    // CSRF
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    // ====== WIADOMOŚCI ======
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const nadawca = currentUsername;
@@ -243,7 +236,6 @@
                 wrapper.className = "p-2 mb-2 rounded text-break";
 
 
-                // Styl w zależności od nadawcy
                 if (nadawcaRaw === "dyzurny") {
                     wrapper.classList.add("bg-info-subtle", "text-dark");
                 } else {
@@ -269,7 +261,6 @@
     }
 
 
-    // ====== STATUSY PATROLI ======
     async function fetchStatus(patrolNumber) {
         try {
             const res = await fetch(`/patrol/status/?patrol_number=${encodeURIComponent(patrolNumber)}`, {
@@ -394,7 +385,7 @@
         }
     }
 
-    // ====== INICJALIZACJA ======
+
     patrolSelect.addEventListener("change", () => {
         const selected = patrolSelect.value;
         messagesDiv.innerHTML = '<div class="text-muted">Ładowanie komunikatów...</div>';

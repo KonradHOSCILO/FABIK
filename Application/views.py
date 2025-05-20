@@ -1,4 +1,3 @@
-from django.http import JsonResponse, HttpResponse
 from Application.firestore_fetch_data import (
     fetch_person_by_pesel_or_data,
     fetch_vehicle_by_plate_or_vin,
@@ -8,58 +7,25 @@ from Application.firestore_fetch_data import (
     pobierz_osoby_i_pojazdy_z_interwencji,
     dodaj_osobe_do_interwencji,
     zakoncz_interwencje,
-    fetch_patrol_status_by_username
 )
-from django.shortcuts import render, redirect
-from google.cloud import firestore
 from django.http import HttpResponse
-from google.oauth2 import service_account
-from google.auth.transport.requests import Request
+from django.views.decorators.csrf import csrf_exempt
 from Application.firestore_fetch_data import fetch_patrol_status_by_username
-from django.utils.timezone import make_aware, make_naive, is_aware, is_naive
-import requests
 import datetime
-
-import json
-
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 import firebase_admin
 from firebase_admin import credentials, firestore
 from firebase_config import db
-
-from datetime import datetime
-from datetime import UTC
 from google.cloud.firestore_v1 import SERVER_TIMESTAMP  # Poprawny import
-
-from django.contrib.auth.decorators import login_required
-from .models import Message
-from .getmessages import pobierz_wszystkie_wiadomosci
+from .get_messages import pobierz_wszystkie_wiadomosci, pobierz_wiadomosci_dla_patrolu
+from django.http import JsonResponse
+from datetime import datetime, timedelta
+import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from datetime import datetime
-from django.utils.timezone import make_aware, is_aware, get_default_timezone
-import json
+from .send_messages import wyslij_wiadomosc
 
-
-
-
-
-from django.contrib.auth.models import User
-
-from django.shortcuts import redirect
-
-
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
-
-from .sendmessages import wyslij_wiadomosc
-from .getmessages import pobierz_wiadomosci_dla_patrolu
-
-import json
 if not firebase_admin._apps:
     cred = credentials.Certificate("./credentials.json")
     firebase_admin.initialize_app(cred)
@@ -97,11 +63,11 @@ def get_messages_view(request, patrol_id):
 
     try:
         print(f"get_messages_view patrol_id: {patrol_id}")
+
         if patrol_id == "all":
             messages = pobierz_wszystkie_wiadomosci()
         else:
             messages = pobierz_wiadomosci_dla_patrolu(patrol_id)
-            messages = [msg for msg in messages if msg.get("nadawca") in ("dyzurny", patrol_id)]
 
         print(f"Pobrane wiadomości: {messages}")
         return JsonResponse(messages, safe=False)
@@ -111,7 +77,8 @@ def get_messages_view(request, patrol_id):
         traceback.print_exc()
         return JsonResponse({"status": "error", "error": str(e)}, status=500)
 
-# --- Widok logowania patrolu i dyżurnego ---
+
+# Widok logowania patrolu i dyżurnego
 def patrol_login_view(request):
     if request.method == 'POST':
         username = request.POST.get('login')
@@ -133,24 +100,12 @@ def patrol_login_view(request):
     return render(request, 'logowanie.html')
 
 
-# --- Dashboard dla dyżurnego i admina ---
+# Dashboard dla dyżurnego i admina
 @login_required
 def dashboard_view(request):
     if not request.user.is_authenticated or request.user.username.lower() not in ['dyzurny', 'admin']:
         return redirect('strona_glowna_html')
     return render(request, 'dashboard.html')
-
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from datetime import datetime
-import json
-
-from datetime import datetime, timedelta
-import json
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 
 
 @login_required
@@ -218,10 +173,6 @@ def historia_dyzurny_view(request):
         'user_id': request.user.username.lower(),
         'wybrany_patrol': wybrany_patrol,
     })
-
-
-
-
 
 
 @csrf_exempt
@@ -340,12 +291,14 @@ def rozpocznij_interwencje_view(request):
             return HttpResponse("Błąd podczas tworzenia interwencji", status=500)
     return HttpResponse("Nieprawidłowa metoda", status=405)
 
+
 def pobierz_dane_interwencji_view(request):
     interwencja_id = request.GET.get("id")
     dane = pobierz_osoby_i_pojazdy_z_interwencji(interwencja_id)
     if "error" in dane:
         return JsonResponse({"error": dane["error"]}, status=dane.get("status_code", 400))
     return JsonResponse(dane)
+
 
 def wyszukaj_osobe_view(request):
     pesel = request.GET.get("pesel")
@@ -360,6 +313,7 @@ def wyszukaj_osobe_view(request):
     else:
         return JsonResponse({"error": "Nie znaleziono osoby"}, status=404)
 
+
 def wyszukaj_pojazd_view(request):
     identyfikator = request.GET.get("identyfikator")
     document, tryb = fetch_vehicle_by_plate_or_vin(identyfikator)
@@ -367,6 +321,7 @@ def wyszukaj_pojazd_view(request):
         return JsonResponse(document)
     else:
         return JsonResponse({"error": "Nie znaleziono pojazdu"}, status=404)
+
 
 def dodaj_pojazd_interwencja_view(request):
     if request.method == "POST":
@@ -400,6 +355,7 @@ def dodaj_pojazd_interwencja_view(request):
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Tylko POST"}, status=405)
 
+
 def dodaj_osobe_interwencja_view(request):
     if request.method == "POST":
         try:
@@ -430,6 +386,7 @@ def dodaj_osobe_interwencja_view(request):
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Tylko POST"}, status=405)
 
+
 def zakoncz_interwencje_view(request):
     if request.method == "POST":
         try:
@@ -457,12 +414,6 @@ def zakoncz_interwencje_view(request):
     return JsonResponse({"error": "Tylko POST"}, status=405)
 
 
-def historia_view(request):
-    # Dla uproszczenia przykładowo hardkodowany patrol_id
-    patrol_id = '601'
-    interwencje = fetch_interwencje_by_patrol(patrol_id)
-    return render(request, 'historia_html.html', {'interwencje': interwencje})
-
 def strona_glowna_view(request):
     patrol_status = None
     username = ""
@@ -476,8 +427,10 @@ def strona_glowna_view(request):
             db = firestore.client()
             all_docs = db.collection("interwencje").stream()
 
-            # Liczymy tylko te, których ID kończy się na _{username}
-            interwencje_count = sum(1 for doc in all_docs if doc.id.startswith(datetime.today().strftime("%Y-%m-%d")) and doc.id.endswith(f"_{username}"))
+            # liczymy tylko te, których ID kończy się na _{username}
+            interwencje_count = sum(1 for doc in all_docs if
+                                    doc.id.startswith(datetime.today().strftime("%Y-%m-%d")) and doc.id.endswith(
+                                        f"_{username}"))
 
     return render(request, 'strona_glowna.html', {
         'patrol_status': patrol_status,
@@ -485,48 +438,62 @@ def strona_glowna_view(request):
         'interwencje_count': interwencje_count,
     })
 
+
 def logowanie_view(request):
     return render(request, 'logowanie.html')
+
 
 def szukaj_wybor_view(request):
     return render(request, 'szukaj_wybor.html')
 
+
 def szukaj_osoba_sposob_view(request):
     return render(request, 'szukaj_osoba_sposob.html')
+
 
 def szukaj_osoba_pesel_view(request):
     return render(request, 'szukaj_osoba_pesel.html')
 
+
 def szukaj_osoba_dane_view(request):
     return render(request, 'szukaj_osoba_dane.html')
+
 
 def szukaj_pojazd_sposob_view(request):
     return render(request, 'szukaj_pojazd_sposob.html')
 
+
 def szukaj_pojazd_rej_view(request):
     return render(request, 'szukaj_pojazd_rej.html')
+
 
 def szukaj_pojazd_vin_view(request):
     return render(request, 'szukaj_pojazd_vin.html')
 
+
 def notatka_view(request):
     return render(request, 'notatka.html')
+
 
 def dane_pojazd_view(request):
     return render(request, 'dane_pojazd.html')
 
+
 def formularz_pojazd_view(request):
     return render(request, 'formularz_pojazd.html')
+
 
 def notatka_view(request):
     return render(request, 'notatka.html')
 
-# Inicjalizacja Firebase (tylko raz)
+
+# Inicjalizacja Firebase
 if not firebase_admin._apps:
     cred = credentials.Certificate("credentials.json")
     firebase_admin.initialize_app(cred)
 
-# Widok: historia interwencji
+
+# historia interwencji
 def historia_interwencji(request):
     db = firestore.client()
     historia = []
@@ -534,7 +501,7 @@ def historia_interwencji(request):
     user_id = str(request.user.username)
     wybrany_patrol = request.GET.get("patrol")
 
-    # Dobierz odpowiednie zapytanie w zależności od użytkownika
+    # dobieranie zapytania w zależności od użytkownika
     if user_id == "dyzurny":
         if wybrany_patrol:
             query = db.collection("interwencje").where("patrol_wysylajacy", "==", wybrany_patrol)
@@ -543,10 +510,10 @@ def historia_interwencji(request):
     else:
         query = db.collection("interwencje").where("patrol_wysylajacy", "==", user_id)
 
-    # Pobierz wszystkie interwencje z zapytania
+    # pobierz wszystkie interwencje z zapytania
     wszystkie = query.stream()
 
-    # Filtrowanie i sortowanie po stronie Pythona
+    # filtrowanie i sortowanie po stronie pythona
     interwencje_z_data = []
     for doc in wszystkie:
         dane = doc.to_dict()
@@ -554,7 +521,7 @@ def historia_interwencji(request):
         if data_rozp:  # pomijaj jeśli brak daty rozpoczęcia
             interwencje_z_data.append((doc.id, data_rozp))
 
-    # Sortowanie malejąco (najnowsze najpierw)
+    # Sortowanie malejąco
     interwencje_z_data.sort(key=lambda x: x[1], reverse=True)
 
     for doc_id, data_rozp in interwencje_z_data:
@@ -573,16 +540,7 @@ def historia_interwencji(request):
     })
 
 
-    lista_patroli = ["601", "602", "603", "admin", "dyzurny"]
-
-    return render(request, "historia_html.html", {
-        "historia": historia,
-        "user_id": user_id,
-        "lista_patroli": lista_patroli,
-        "wybrany_patrol": wybrany_patrol
-    })
-
-# Widok: szczegóły jednej interwencji
+# szczegóły jednej interwencji
 def szczegoly_interwencji_api(request, interwencja_id):
     db = firestore.client()
     doc = db.collection("interwencje").document(interwencja_id).get()
@@ -596,12 +554,14 @@ def szczegoly_interwencji_api(request, interwencja_id):
         })
     return JsonResponse({"error": "Nie znaleziono"}, status=404)
 
+
 def szczegoly_osoby_api(request, pesel):
     db = firestore.client()
     doc = db.collection("osoby").document(pesel).get()
     if doc.exists:
         return JsonResponse(doc.to_dict())
     return JsonResponse({"error": "Nie znaleziono osoby"}, status=404)
+
 
 def szczegoly_pojazdu_api(request, rejestracja):
     db = firestore.client()

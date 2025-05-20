@@ -16,6 +16,7 @@ if not firebase_admin._apps:
 
 _firestore_db = firestore.client()
 
+
 def wyslij_wiadomosc(nadawca, odbiorca, tresc):
     timestamp = datetime.utcnow()
     doc_id = f"{odbiorca}_{timestamp.strftime('%Y%m%dT%H%M%S%f')}"  # np. 601_20250518T143205123456
@@ -27,5 +28,3 @@ def wyslij_wiadomosc(nadawca, odbiorca, tresc):
         'tresc': tresc,
         'timestamp': timestamp
     })
-
-    return True, "Wiadomość wysłana"

@@ -6,16 +6,16 @@
 
 <p><strong>Osoby biorące udział:</strong></p>
 <ul>
-  {% for pesel in interwencja.pesele_osob_bioracych_udzial_w_interwencji %}
-    <li>{{ pesel }}</li>
-  {% endfor %}
+    {% for pesel in interwencja.pesele_osob_bioracych_udzial_w_interwencji %}
+        <li>{{ pesel }}</li>
+    {% endfor %}
 </ul>
 
 <p><strong>Pojazdy biorące udział:</strong></p>
 <ul>
-  {% for pojazd in interwencja.pojazdy_biorace_udzial_w_interwencji %}
-    <li>{{ pojazd }}</li>
-  {% endfor %}
+    {% for pojazd in interwencja.pojazdy_biorace_udzial_w_interwencji %}
+        <li>{{ pojazd }}</li>
+    {% endfor %}
 </ul>
 
-<a href="{% url 'historia' %}">← Wróć do historii</a>
+<a href="{% url 'historia' %}"> Wróć do historii</a>
