@@ -103,13 +103,15 @@
 
     <script>
 
-
+    //wysylanie wiadomosci po kliknieciu wyslij
         document.getElementById('send-message-form').addEventListener('submit', function (e) {
             e.preventDefault();
+            //pobranie tekstu z pola
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text) return;
 
+            //wyslanie post z tescia wiadomosci
             fetch("/api/send_message/", {
                 method: 'POST',
                 headers: {
@@ -121,10 +123,12 @@
                     odbiorca: "dyzurny"
                 })
             })
+                //obsluga bledow html
                 .then(response => {
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     return response.json();
                 })
+                //czyszczenie pola po wyslaniu
                 .then(data => {
                     input.value = "";
                     console.log("Wiadomość wysłana:", data);
@@ -142,6 +146,7 @@
                 const cookies = document.cookie.split(';');
                 for (let cookie of cookies) {
                     cookie = cookie.trim();
+                    //szukanie ciasteczka po nazwie
                     if (cookie.startsWith(name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
@@ -152,9 +157,11 @@
         }
 
         function setStatus(status) {
+            //odczytwanie nr i statusu
             const patrolStatusElem = document.getElementById('patrol-status');
             const patrolNumber = patrolStatusElem.getAttribute('data-patrol-number');
 
+            //wysylamy post z nowym statusem
             fetch('/patrol/status/', {
                 method: 'POST',
                 headers: {
@@ -169,6 +176,7 @@
                 })
                 .then(data => {
                     if (data.status === "ok") {
+                        //aktualizacja statusu
                         patrolStatusElem.innerText = data.display;
                         console.log("Status zaktualizowany!");
                     } else {
@@ -185,6 +193,7 @@
             const patrolStatusElem = document.getElementById('patrol-status');
             const patrolNumber = patrolStatusElem.getAttribute('data-patrol-number');
 
+            //pobieramy get ze statusem
             fetch(`/patrol/status/?patrol_number=${encodeURIComponent(patrolNumber)}`, {
                 method: 'GET',
                 headers: {
@@ -197,6 +206,7 @@
                     return response.json();
                 })
                 .then(data => {
+                    //aktualizowanie tekstu statusu w interface
                     if (data.status === "ok") {
                         patrolStatusElem.innerText = data.display || "brak statusu";
                     } else {
@@ -208,11 +218,13 @@
                 });
         }
 
+        //odpalamy po zaladowaniu strony
         document.addEventListener('DOMContentLoaded', () => {
+            //pobieramy status
             const patrolStatusElem = document.getElementById('patrol-status');
             patrolStatusElem.innerText = 'Ładowanie...';
 
-            // Natychmiastowe pobranie statusu po załadowaniu
+            //natychmiastowe pobranie statusu po załadowaniu
             refreshStatus();
 
             // Odświeżanie statusu i wiadomości
@@ -234,6 +246,7 @@
                 firstLoad = false;
             }
 
+            //pobieranie wiadomosci z api
             fetch("/api/get_messages/all/")
                 .then(res => {
                     if (!res.ok) throw new Error(`Błąd HTTP: ${res.status}`);
@@ -242,9 +255,10 @@
                 .then(messages => {
                     console.log("Wszystkie wiadomości z API:", messages);
 
-                    // Czyścimy i pokazujemy wiadomości dopiero po pobraniu
+                    //czyscimy przed dodaniem nowych wiadomosci
                     container.innerHTML = "";
 
+                    //filtrowanie
                     const filtered = messages.filter(msg => {
                         const nadawca = (msg.nadawca || "").toLowerCase();
                         const odbiorca = (msg.odbiorca || "").toLowerCase();
@@ -252,7 +266,7 @@
                         const match =
                             (nadawca === patrolId && odbiorca === "dyzurny") ||
                             (nadawca === "dyzurny" && (odbiorca === patrolId || odbiorca === "all"));
-
+                        //sprawdzamy czy pasuje/debugging
                         if (match) {
                             console.log("Pasuje:", msg);
                         } else {
@@ -266,14 +280,16 @@
                         container.innerHTML = "<p class='text-muted'>Brak wiadomości</p>";
                         return;
                     }
-
+                    //sortowanie wiadomosci po czasie rosnaco
                     filtered.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
+                    //wyswietlanie kazdej wiadomosci
                     for (const msg of filtered) {
                         const time = new Date(msg.timestamp).toLocaleTimeString("pl-PL", {hour12: false});
                         const from = msg.nadawca === "dyzurny" ? "Dyżurny" : msg.nadawca;
                         const to = msg.odbiorca === "dyzurny" ? "Dyżurny" : msg.odbiorca;
 
+                        //formatowanie wiadomosci
                         const div = document.createElement("div");
                         div.className = "p-2 mb-2 rounded text-break";
 

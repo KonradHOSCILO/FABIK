@@ -102,21 +102,26 @@
             return;
         }
 
+        //ustalanie tytulu modala, szczegolow interwencji i statusu
         document.querySelector('#interwencjaModal .modal-title').innerText = interwencja.nazwa_interwencji;
         document.getElementById('notatka').innerText = interwencja.notatka || 'Brak notatki';
         document.getElementById('status').innerText = interwencja.status || 'Brak statusu';
 
+        //czyszczenie listy osob i pojazdow
         const osobyLista = document.getElementById('osoby');
         const pojazdyLista = document.getElementById('pojazdy');
         osobyLista.innerHTML = '';
         pojazdyLista.innerHTML = '';
 
+        //dodajemy osoby biorace udzial w interwencji
         if (Array.isArray(interwencja.pesele_osob_bioracych_udzial_w_interwencji) && interwencja.pesele_osob_bioracych_udzial_w_interwencji.length > 0) {
             interwencja.pesele_osob_bioracych_udzial_w_interwencji.forEach(pesel => {
                 const li = document.createElement('li');
                 li.classList.add('text-primary');
                 li.style.cursor = 'pointer';
                 li.innerText = pesel;
+
+                //wywolanie szczegolow po kliknieciu
                 li.onclick = () => pokazSzczegolyOsoby(pesel);
                 osobyLista.appendChild(li);
             });
@@ -124,6 +129,7 @@
             osobyLista.innerHTML = '<li>Brak danych</li>';
         }
 
+        //to samo z pojazdami
         if (Array.isArray(interwencja.pojazdy_biorace_udzial_w_interwencji) && interwencja.pojazdy_biorace_udzial_w_interwencji.length > 0) {
             interwencja.pojazdy_biorace_udzial_w_interwencji.forEach(rej => {
                 const li = document.createElement('li');
@@ -138,21 +144,27 @@
         }
     }
 
+    //wyswietalnie szczegolow ale po peselu
     function pokazSzczegolyOsoby(pesel) {
         fetch(`/api/osoba/${pesel}/`)
             .then(res => {
                 if (!res.ok) throw new Error('Błąd sieci lub brak danych osoby');
                 return res.json();
             })
+            //budowanie zawartosci modala z danymi
             .then(data => {
                 let body = '';
                 for (const [key, value] of Object.entries(data)) {
                     let val = Array.isArray(value) ? value.join(', ') : value;
+                    //formatownanie
                     body += `<p><strong>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> ${val}</p>`;
                 }
+
+                //wyswietlanie danych
                 document.getElementById('modalTitle').innerText = `Osoba: ${pesel}`;
                 document.getElementById('modalBody').innerHTML = body;
 
+                //pokazanie modala w bootstrapie
                 const modal = new bootstrap.Modal(document.getElementById('szczegolyModal'));
                 modal.show();
             })
@@ -161,6 +173,7 @@
             });
     }
 
+    //pojazd po nr rejestracyjnym
     function pokazSzczegolyPojazdu(rej) {
         fetch(`/api/pojazd/${rej}/`)
             .then(res => {

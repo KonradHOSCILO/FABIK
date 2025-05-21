@@ -17,10 +17,12 @@ from django.contrib import messages
 import firebase_admin
 from firebase_admin import credentials, firestore
 from firebase_config import db
-from google.cloud.firestore_v1 import SERVER_TIMESTAMP  # Poprawny import
+#ustawia timestamp na czas serwera firestore
+from google.cloud.firestore_v1 import SERVER_TIMESTAMP
 from .get_messages import pobierz_wszystkie_wiadomosci, pobierz_wiadomosci_dla_patrolu
 from django.http import JsonResponse
 from datetime import datetime, timedelta
+#przetwarzanie plikow json
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -31,12 +33,13 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
     db = firestore.client()
 
-
+#wyłącza sprawdzanie CSRF - pozwala na testowanie POST z zewnętrznych źródeł
 @csrf_exempt
 def send_message_view(request):
+    #tylko żądania get
     if request.method != "POST":
         return JsonResponse({"status": "error", "error": "Metoda nieobsługiwana"}, status=405)
-
+    #parsowanie json
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -47,9 +50,9 @@ def send_message_view(request):
 
     if not tresc or not odbiorca:
         return JsonResponse({"status": "error", "error": "Brak danych"}, status=400)
-
+    #jeżeli jest zalogowany to pobieramy jego nick, jak nie to nadawca to anonim
     nadawca = request.user.username if request.user.is_authenticated else "anonim"
-
+    #wysyłamy wiadomosc do firestore
     try:
         wyslij_wiadomosc(nadawca, odbiorca, tresc)
         return JsonResponse({"status": "ok"})
@@ -58,17 +61,19 @@ def send_message_view(request):
 
 
 def get_messages_view(request, patrol_id):
+    #tylko get
     if request.method != "GET":
         return JsonResponse({"status": "error", "error": "Metoda nieobsługiwana"}, status=405)
 
     try:
+            #debug
         print(f"get_messages_view patrol_id: {patrol_id}")
 
         if patrol_id == "all":
             messages = pobierz_wszystkie_wiadomosci()
         else:
             messages = pobierz_wiadomosci_dla_patrolu(patrol_id)
-
+        #zwraca listę
         print(f"Pobrane wiadomości: {messages}")
         return JsonResponse(messages, safe=False)
     except Exception as e:
@@ -113,20 +118,26 @@ def historia_dyzurny_view(request):
     if request.user.username.lower() != 'dyzurny':
         return redirect('strona_glowna_html')
 
+    #pobieramy nr patrolu ktorego chcemy pokazac historie
     wybrany_patrol = request.GET.get('patrol', '').strip()
     interwencje_ref = db.collection('interwencje')
     dokumenty = interwencje_ref.stream()
 
+    #pobieramy wszystkie dane z historii
     historia = []
     for doc in dokumenty:
         data = doc.to_dict()
         data['id_notatki'] = doc.id
 
+        #tylko z danego patrolu
         patrol = str(data.get('patrol_wysylajacy', '')).strip()
         if wybrany_patrol and patrol != wybrany_patrol:
             continue
 
+        #pobieramy zapisaną datę, a jak nie ma to bieżemy automatycznie zapisaną z firestore
         data_wyslania_raw = data.get('data_wyslania') or doc.create_time
+
+        #parsujemy dane i próbujemy różnych formatów :)
         if isinstance(data_wyslania_raw, datetime):
             dt = data_wyslania_raw
         elif isinstance(data_wyslania_raw, str):
@@ -140,8 +151,9 @@ def historia_dyzurny_view(request):
         else:
             dt = None
 
+        #dodajemy 2h do czasu, bo firestore ma serwery w innych strefach czasowych. Można to lepiej zrobić ale działa
         if dt:
-            dt += timedelta(hours=2)  # 🔧 Korekta czasu do UTC+2
+            dt += timedelta(hours=2)
             godzina = dt.strftime("%H:%M")
             data_str = dt.strftime("%Y-%m-%d")
             sort_key = dt
@@ -152,6 +164,7 @@ def historia_dyzurny_view(request):
             sort_key = datetime.min
             wyswietlana_data = "brak"
 
+        #etykietowanie interwencji
         nazwa = f"{patrol} {godzina} {data_str} {doc.id}"
         data['nazwa_interwencji'] = nazwa
         data['data_wyslania'] = wyswietlana_data
@@ -159,6 +172,7 @@ def historia_dyzurny_view(request):
 
         historia.append(data)
 
+    #sortujemy dane i usuwamy tymczasowo sortkey
     historia.sort(key=lambda x: x['_sort_key'], reverse=True)
     for item in historia:
         item.pop('_sort_key', None)
@@ -177,7 +191,7 @@ def historia_dyzurny_view(request):
 
 @csrf_exempt
 def set_patrol_status(request):
-    """Obsługuje zmianę lub pobieranie statusu patrolu w Firestore"""
+    #Logowanie szczegółów żądania, debuggowanie np. błędów w wysyłanym json
     print(f"\n=== Rozpoczęto przetwarzanie żądania ===")
     print(f"Metoda: {request.method}")
     print(f"Użytkownik: {request.user}")
@@ -207,6 +221,7 @@ def set_patrol_status(request):
     }
 
     try:
+        #jeżeli post, to zmieniamy status
         if request.method == "POST":
             print("\n=== PRZETWARZANIE POST ===")
 
@@ -225,20 +240,21 @@ def set_patrol_status(request):
                 if not new_status:
                     return JsonResponse({"error": "Brak statusu"}, status=400)
 
+            #aktualizujemy status w firestore
             doc_ref = db.collection("patrole").document(str(patrol_number))
             doc_ref.set({
                 "status": new_status,
                 "kryptonim": str(patrol_number),
                 "last_updated": SERVER_TIMESTAMP
             }, merge=True)
-            print("Zapisano w Firestore!")
+            print("Zapisano w Firestore")
 
             return JsonResponse({
                 "status": "ok",
                 "message": f"Status zmieniono na: {display_map.get(new_status, new_status)}",
                 "display": display_map.get(new_status, new_status)
             })
-
+        #sprawdzanie aktualnego statusu
         elif request.method == "GET":
             print("\n=== PRZETWARZANIE GET ===")
 
@@ -257,6 +273,7 @@ def set_patrol_status(request):
                 fs_timestamp = status_data.get("last_updated")
                 iso_timestamp = fs_timestamp.isoformat().replace("+00:00", "Z") if fs_timestamp else None
 
+                #jezeli wszystko gra to zwracamy status i ostatnią zmianę
                 return JsonResponse({
                     "status": "ok",
                     "display": display_map.get(status_data.get("status"), "brak statusu"),
@@ -269,6 +286,7 @@ def set_patrol_status(request):
                     "timestamp": None
                 })
 
+        #tylko get i post
         else:
             return JsonResponse({"error": "Metoda niedozwolona"}, status=405)
 
@@ -415,6 +433,7 @@ def zakoncz_interwencje_view(request):
 
 
 def strona_glowna_view(request):
+    #domyślne dane niezalogowanych
     patrol_status = None
     username = ""
     interwencje_count = 0
@@ -423,11 +442,12 @@ def strona_glowna_view(request):
         username = request.user.username
         patrol_status = fetch_patrol_status_by_username(username)
 
+        #jeżeli patrol ma status to pobieramy wszystkie interwencje
         if patrol_status:
             db = firestore.client()
             all_docs = db.collection("interwencje").stream()
 
-            # liczymy tylko te, których ID kończy się na _{username}
+            #liczymy tylko te których ID kończy się na username
             interwencje_count = sum(1 for doc in all_docs if
                                     doc.id.startswith(datetime.today().strftime("%Y-%m-%d")) and doc.id.endswith(
                                         f"_{username}"))

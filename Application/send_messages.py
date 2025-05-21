@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -18,9 +17,11 @@ _firestore_db = firestore.client()
 
 
 def wyslij_wiadomosc(nadawca, odbiorca, tresc):
+    #pobiera biezacy czas
     timestamp = datetime.utcnow()
-    doc_id = f"{odbiorca}_{timestamp.strftime('%Y%m%dT%H%M%S%f')}"  # np. 601_20250518T143205123456
-
+    #generuje id wiadomosci
+    doc_id = f"{odbiorca}_{timestamp.strftime('%Y%m%dT%H%M%S%f')}"
+    #sprawdza czy takie id juz istnieje, jak nie to tworzy
     doc_ref = _firestore_db.collection('wiadomosci').document(doc_id)
     doc_ref.set({
         'nadawca': nadawca,

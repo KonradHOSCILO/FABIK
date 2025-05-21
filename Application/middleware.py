@@ -1,24 +1,27 @@
 from django.conf import settings
 from django.shortcuts import redirect
 
-
+#sprawdzenie czy uzytkownik ma dostep
 class LoginRequiredMiddleware:
+    #przekazywanie żądania do views
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        #pobiera url żądania i je formatuje
         path = request.path_info.lstrip('/').split('?')[0]
 
-        # Ścieżki dozwolone dla użytkownika niezalogowanego
+        # scieżki dozwolone dla użytkownika niezalogowanego
         allowed_for_anonymous = [
             'logowanie/',
             'logout/',
             'admin/login/',
-            'dashboard/',
+
         ]
 
-        # Sprawdzenie czy użytkownik jest zalogowany
+        # Sprawdzenie czy użytkownik jest NIE zalogowany
         if not request.user.is_authenticated:
+            #jeżeli nie to przekierowuje go na login
             if not any(path.startswith(prefix) for prefix in allowed_for_anonymous):
                 return redirect(settings.LOGIN_URL)
             return self.get_response(request)
